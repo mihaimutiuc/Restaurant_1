@@ -1,0 +1,23 @@
+{
+  "logo": {
+    "text": "La Casa",
+    "tagline": "Restaurant & Bar",
+    "initials": "LC"
+  },
+  "links": [
+    { "id": 1, "label": "Acasă", "href": "#hero", "icon": "home" },
+    { "id": 2, "label": "Meniu", "href": "#menu", "icon": "menu" },
+    { "id": 3, "label": "Despre noi", "href": "#about", "icon": "info" },
+    { "id": 4, "label": "Testimoniale", "href": "#testimonials", "icon": "star" },
+    { "id": 5, "label": "Contact", "href": "#contact", "icon": "phone" }
+  ],
+  "authLinks": {
+    "login": { "label": "Autentificare", "href": "/auth/login", "icon": "login" },
+    "register": { "label": "Înregistrare", "href": "/auth/register", "icon": "register" },
+    "logout": { "label": "Deconectare", "icon": "logout" }
+  },
+  "cartLabel": "Coș",
+  "orderLabel": "Comenzi",
+  "mobileMenuTitle": "Navigare",
+  "welcomeText": "Bine ai venit"
+}

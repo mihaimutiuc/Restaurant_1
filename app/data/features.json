@@ -1,0 +1,42 @@
+{
+  "sectionTitle": "De ce să ne alegi?",
+  "sectionSubtitle": "Descoperă ce ne face speciali",
+  "features": [
+    {
+      "id": 1,
+      "icon": "🥗",
+      "title": "Ingrediente Proaspete",
+      "description": "Folosim doar ingrediente proaspete și locale, selectate cu grijă în fiecare dimineață."
+    },
+    {
+      "id": 2,
+      "icon": "👨‍🍳",
+      "title": "Bucătari Profesioniști",
+      "description": "Echipa noastră de bucătari are peste 15 ani de experiență în arta culinară."
+    },
+    {
+      "id": 3,
+      "icon": "🚚",
+      "title": "Livrare Rapidă",
+      "description": "Livrăm comanda ta în maximum 45 de minute, caldă și proaspătă."
+    },
+    {
+      "id": 4,
+      "icon": "💰",
+      "title": "Prețuri Accesibile",
+      "description": "Calitate premium la prețuri competitive. Oferte speciale în fiecare zi."
+    },
+    {
+      "id": 5,
+      "icon": "🌿",
+      "title": "Opțiuni Vegetariene",
+      "description": "O gamă variată de preparate vegetariene și vegane pentru toate gusturile."
+    },
+    {
+      "id": 6,
+      "icon": "⭐",
+      "title": "Calitate Garantată",
+      "description": "Satisfacția clienților este prioritatea noastră. Garantăm calitatea fiecărui preparat."
+    }
+  ]
+}

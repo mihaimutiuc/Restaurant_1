@@ -1,0 +1,22 @@
+{
+  "sectionTitle": "Despre Noi",
+  "sectionSubtitle": "Povestea noastră",
+  "mainTitle": "O tradiție culinară de peste 15 ani",
+  "description": [
+    "Restaurantul Delicious a fost fondat în 2009 cu o singură misiune: să aducem gustul autentic al bucătăriei românești în casele voastre.",
+    "De-a lungul anilor, am crescut de la un mic restaurant de familie la unul dintre cele mai apreciate locuri din oraș, păstrând mereu aceleași valori: calitate, prospețime și respect pentru tradiție.",
+    "Echipa noastră de bucătari experimentați pregătește fiecare preparat cu pasiune și dedicare, folosind rețete transmise din generație în generație."
+  ],
+  "image": "/images/about-restaurant.jpg",
+  "highlights": [
+    { "id": 1, "value": "15+", "label": "Ani de experiență" },
+    { "id": 2, "value": "50,000+", "label": "Clienți mulțumiți" },
+    { "id": 3, "value": "100+", "label": "Preparate în meniu" },
+    { "id": 4, "value": "25", "label": "Bucătari profesioniști" }
+  ],
+  "quote": {
+    "text": "Gătim cu inima și servim cu zâmbetul.",
+    "author": "Chef Alexandru Popescu",
+    "role": "Fondator & Chef Executiv"
+  }
+}

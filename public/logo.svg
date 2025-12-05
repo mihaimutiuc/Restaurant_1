@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 50" fill="none">
+  <!-- Text "La Casa" stylized -->
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316"/>
+      <stop offset="100%" style="stop-color:#dc2626"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Fork icon -->
+  <g fill="url(#logoGradient)">
+    <path d="M8 8 L8 22 L9.5 22 L9.5 42 L14.5 42 L14.5 22 L16 22 L16 8 L14 8 L14 18 L12.5 18 L12.5 8 L11 8 L11 18 L9.5 18 L9.5 8 Z"/>
+  </g>
+  
+  <!-- "La" text -->
+  <text x="22" y="32" font-family="Georgia, serif" font-size="24" font-weight="bold" fill="#1f2937">La</text>
+  
+  <!-- "Casa" text with gradient -->
+  <text x="48" y="32" font-family="Georgia, serif" font-size="24" font-weight="bold" font-style="italic" fill="url(#logoGradient)">Casa</text>
+  
+  <!-- Decorative underline -->
+  <path d="M22 38 Q60 42 98 38" stroke="url(#logoGradient)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Small chef hat accent -->
+  <g fill="url(#logoGradient)" transform="translate(100, 12) scale(0.5)">
+    <ellipse cx="15" cy="22" rx="14" ry="8"/>
+    <rect x="5" y="10" width="20" height="12" rx="2"/>
+    <ellipse cx="15" cy="8" rx="8" ry="6"/>
+  </g>
+</svg>

@@ -1,0 +1,46 @@
+{
+  "logo": {
+    "text": "La Casa",
+    "tagline": "Restaurant & Bar",
+    "initials": "LC"
+  },
+  "description": "La Casa Restaurant & Bar - Gustul autentic al bucătăriei românești. Preparate tradiționale gătite cu pasiune și ingrediente proaspete.",
+  "sections": [
+    {
+      "id": 1,
+      "title": "Navigare",
+      "links": [
+        { "label": "Acasă", "href": "#hero" },
+        { "label": "Meniu", "href": "#menu" },
+        { "label": "Despre noi", "href": "#about" },
+        { "label": "Contact", "href": "#contact" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Legal",
+      "links": [
+        { "label": "Termeni și condiții", "href": "/termeni" },
+        { "label": "Politica de confidențialitate", "href": "/confidentialitate" },
+        { "label": "Politica cookies", "href": "/cookies" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Contact",
+      "content": [
+        { "icon": "📍", "text": "Strada Victoriei 123, București" },
+        { "icon": "📞", "text": "+40 721 123 456" },
+        { "icon": "✉️", "text": "contact@delicious.ro" }
+      ]
+    }
+  ],
+  "socialMedia": [
+    { "id": 1, "name": "Facebook", "url": "https://facebook.com", "icon": "facebook" },
+    { "id": 2, "name": "Instagram", "url": "https://instagram.com", "icon": "instagram" },
+    { "id": 3, "name": "Twitter", "url": "https://twitter.com", "icon": "twitter" },
+    { "id": 4, "name": "TikTok", "url": "https://tiktok.com", "icon": "tiktok" }
+  ],
+  "copyright": "© 2024 Delicious Restaurant. Toate drepturile rezervate.",
+  "paymentMethods": ["Visa", "Mastercard", "Apple Pay", "Google Pay"]
+}

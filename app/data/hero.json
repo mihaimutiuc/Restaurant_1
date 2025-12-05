@@ -1,0 +1,19 @@
+{
+  "title": "Bine ai venit La Casa",
+  "subtitle": "Experimentează gustul autentic al bucătăriei românești",
+  "description": "Preparate tradiționale gătite cu ingrediente proaspete și multă pasiune. Comandă online și bucură-te de o experiență culinară de neuitat.",
+  "primaryButton": {
+    "text": "Vezi Meniul",
+    "href": "#menu"
+  },
+  "secondaryButton": {
+    "text": "Rezervă o masă",
+    "href": "#contact"
+  },
+  "stats": [
+    { "id": 1, "value": "500+", "label": "Preparate servite zilnic" },
+    { "id": 2, "value": "15+", "label": "Ani de experiență" },
+    { "id": 3, "value": "4.9", "label": "Rating mediu" }
+  ],
+  "backgroundImage": "/images/hero-bg.jpg"
+}

@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  isAdmin       Boolean   @default(false)
+  accounts      Account[]
+  sessions      Session[]
+  cart          Cart?
+  orders        Order[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Category {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug     String    @unique
+  name     String
+  icon     String
+  order    Int       @default(0)
+  products Product[]
+}
+
+model Product {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId       Int      @unique // ID numeric pentru compatibilitate
+  name            String
+  description     String
+  longDescription String?
+  price           Float
+  image           String
+  categoryId      String   @db.ObjectId
+  category        Category @relation(fields: [categoryId], references: [id])
+  isPopular       Boolean  @default(false)
+  isNew           Boolean  @default(false)
+  ingredients     String[]
+  allergens       String[]
+  preparationTime Int      // Timp în minute pentru calcul
+  displayTime     String   // Afișare ex: "15 min"
+  calories        Int
+  isAvailable     Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @unique @db.ObjectId
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  cartId          String @db.ObjectId
+  cart            Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId       Int
+  name            String
+  price           Float
+  image           String
+  quantity        Int
+  preparationTime Int    @default(10) // Timp de preparare în minute
+}
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String      @db.ObjectId
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           OrderItem[]
+  total           Float
+  deliveryFee     Float       @default(0) // Taxa de livrare
+  status          OrderStatus @default(PENDING)
+  stage           OrderStage  @default(RECEIVED)
+  estimatedTime   Int         @default(45) // minutes
+  isOnHold        Boolean     @default(false) // Comandă în așteptare
+  holdMinutes     Int         @default(0) // Minute de așteptare suplimentare
+  queuePosition   Int?        // Poziția în coadă (câte comenzi sunt înaintea acesteia)
+  deliveryAddress String?
+  phone           String?
+  notes           String?     // Note de la client
+  adminNotes      String?     // Note interne admin
+  assignedTo      String?     // Cine se ocupă de comandă
+  paymentMethod   String      @default("card")
+  isPaid          Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  stageUpdatedAt  DateTime    @default(now())
+}
+
+model OrderItem {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId         String @db.ObjectId
+  order           Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       Int
+  name            String
+  price           Float
+  image           String
+  quantity        Int
+  preparationTime Int    @default(10) // Timp de preparare în minute
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderStage {
+  RECEIVED      // Comanda primită
+  PREPARING     // Se prepară
+  READY         // Gata de livrare
+  OUT_DELIVERY  // În curs de livrare
+  DELIVERED     // Livrată
+}
+
+model Testimonial {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  role      String
+  avatar    String
+  rating    Int
+  text      String
+  date      DateTime @default(now())
+  verified  Boolean  @default(true)
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

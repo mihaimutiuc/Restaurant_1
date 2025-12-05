@@ -1,0 +1,45 @@
+{
+  "sectionTitle": "Contact",
+  "sectionSubtitle": "Hai să păstrăm legătura",
+  "info": {
+    "address": {
+      "icon": "📍",
+      "label": "Adresă",
+      "value": "Strada Victoriei 123, București, România",
+      "link": "https://maps.google.com"
+    },
+    "phone": {
+      "icon": "📞",
+      "label": "Telefon",
+      "value": "+40 721 123 456",
+      "link": "tel:+40721123456"
+    },
+    "email": {
+      "icon": "✉️",
+      "label": "Email",
+      "value": "contact@delicious.ro",
+      "link": "mailto:contact@delicious.ro"
+    },
+    "hours": {
+      "icon": "🕐",
+      "label": "Program",
+      "value": "Luni - Duminică: 10:00 - 23:00"
+    }
+  },
+  "form": {
+    "title": "Trimite-ne un mesaj",
+    "fields": {
+      "name": { "label": "Nume complet", "placeholder": "Ion Popescu" },
+      "email": { "label": "Email", "placeholder": "email@exemplu.com" },
+      "phone": { "label": "Telefon", "placeholder": "+40 7XX XXX XXX" },
+      "subject": { "label": "Subiect", "placeholder": "Rezervare / Întrebare / Feedback" },
+      "message": { "label": "Mesaj", "placeholder": "Scrie mesajul tău aici..." }
+    },
+    "submitButton": "Trimite mesajul"
+  },
+  "socialMedia": [
+    { "id": 1, "name": "Facebook", "url": "https://facebook.com", "icon": "facebook" },
+    { "id": 2, "name": "Instagram", "url": "https://instagram.com", "icon": "instagram" },
+    { "id": 3, "name": "Twitter", "url": "https://twitter.com", "icon": "twitter" }
+  ]
+}
