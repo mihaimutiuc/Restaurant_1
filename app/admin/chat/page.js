@@ -411,7 +411,7 @@ export default function AdminChatPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-120px)] bg-gray-100 rounded-lg overflow-hidden relative">
+    <div className="flex h-[calc(100vh-80px)] sm:h-[calc(100vh-120px)] bg-gray-100 rounded-lg overflow-hidden relative">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
@@ -423,16 +423,16 @@ export default function AdminChatPage() {
       {/* Sidebar - Lista de conversații */}
       <div className={`
         fixed md:relative inset-y-0 left-0 z-50 md:z-auto
-        w-72 sm:w-80 bg-white border-r border-gray-200 flex flex-col
+        w-[85vw] max-w-[300px] sm:w-80 bg-white border-r border-gray-200 flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        md:w-72 lg:w-80
+        md:w-64 lg:w-72
       `}>
-        <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-800">Conversații</h2>
+        <div className="p-2.5 sm:p-4 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-sm sm:text-lg font-semibold text-gray-800">Conversații</h2>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden p-1 text-gray-500 hover:text-gray-700"
+            className="md:hidden p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -443,75 +443,77 @@ export default function AdminChatPage() {
         {/* Chat General */}
         <div 
           onClick={() => handleSelectChat('general')}
-          className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 sm:gap-3 ${
+          className={`p-2.5 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 sm:gap-3 ${
             selectedChat === 'general' ? 'bg-amber-50 border-l-4 border-amber-500' : ''
           }`}
         >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0">
+          <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold text-sm sm:text-base flex-shrink-0">
             👥
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <p className="font-medium text-gray-800 text-sm sm:text-base">Chat General</p>
+            <div className="flex items-center justify-between gap-1">
+              <p className="font-medium text-gray-800 text-xs sm:text-sm truncate">Chat General</p>
               {unreadByChat['general']?.count > 0 && selectedChat !== 'general' && (
-                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex-shrink-0">
                   {unreadByChat['general'].count}
                 </span>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-gray-500">
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">
               {unreadByChat['general']?.count > 0 && selectedChat !== 'general' 
-                ? `${unreadByChat['general'].senderName}: mesaj nou`
-                : `${onlineAdmins.filter(a => a.isOnline).length} admini online`}
+                ? `${unreadByChat['general'].senderName?.split(' ')[0]}: mesaj nou`
+                : `${onlineAdmins.filter(a => a.isOnline).length} online`}
             </p>
           </div>
         </div>
 
-        <div className="px-3 sm:px-4 py-2 bg-gray-50">
-          <p className="text-xs font-medium text-gray-500 uppercase">Mesaje Private</p>
+        <div className="px-2.5 sm:px-4 py-1.5 bg-gray-50">
+          <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Mesaje Private</p>
         </div>
 
         {/* Lista de admini pentru mesaje private */}
         <div className="flex-1 overflow-y-auto">
           {otherAdmins.map(admin => {
             const adminUnread = unreadByChat[admin.id];
+            // Obține datele actualizate din onlineAdmins (care vin din DB)
+            const adminData = onlineAdmins.find(a => a.id === admin.id) || admin;
             return (
               <div 
                 key={admin.id}
                 onClick={() => handleSelectChat(admin.id)}
-                className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 sm:gap-3 ${
+                className={`p-2.5 sm:p-3 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 ${
                   selectedChat === admin.id ? 'bg-amber-50 border-l-4 border-amber-500' : ''
                 }`}
               >
                 <div className="relative flex-shrink-0">
-                  {admin.image ? (
+                  {adminData.image ? (
                     <img 
-                      src={admin.image} 
-                      alt={admin.name || admin.email}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                      src={adminData.image} 
+                      alt={adminData.name || adminData.email}
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${getAvatarColor(admin.email)} flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md`}>
-                      {getInitials(admin.name, admin.email)}
+                    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${getAvatarColor(adminData.email)} flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md`}>
+                      {getInitials(adminData.name, adminData.email)}
                     </div>
                   )}
-                  {isOnline(admin.email) && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full"></span>
+                  {isOnline(adminData.email) && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-800 truncate text-sm sm:text-base">{admin.name || admin.email}</p>
+                  <div className="flex items-center justify-between gap-1">
+                    <p className="font-medium text-gray-800 truncate text-xs sm:text-sm">{adminData.name || adminData.email}</p>
                     {adminUnread?.count > 0 && selectedChat !== admin.id && (
-                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                      <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex-shrink-0">
                         {adminUnread.count}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-500 truncate">
+                  <p className="text-[10px] sm:text-xs text-gray-500 truncate">
                     {adminUnread?.count > 0 && selectedChat !== admin.id ? (
                       <span className="text-gray-700 font-medium">Mesaj nou</span>
-                    ) : isOnline(admin.email) ? (
+                    ) : isOnline(adminData.email) ? (
                       <span className="text-green-600">Online</span>
                     ) : (
                       'Offline'
@@ -523,7 +525,7 @@ export default function AdminChatPage() {
           })}
           
           {otherAdmins.length === 0 && (
-            <div className="p-4 text-center text-gray-500 text-sm">
+            <div className="p-3 text-center text-gray-500 text-xs sm:text-sm">
               <p>Nu există alți administratori</p>
             </div>
           )}
@@ -531,13 +533,13 @@ export default function AdminChatPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col w-full">
+      <div className="flex-1 flex flex-col w-full min-w-0">
         {/* Header */}
-        <div className="p-3 sm:p-4 bg-white border-b border-gray-200 flex items-center gap-2 sm:gap-3">
+        <div className="p-2 sm:p-3 bg-white border-b border-gray-200 flex items-center gap-2">
           {/* Mobile menu button */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+            className="md:hidden p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg flex-shrink-0"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -546,31 +548,33 @@ export default function AdminChatPage() {
 
           {selectedChat === 'general' ? (
             <>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm sm:text-lg flex-shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm flex-shrink-0">
                 👥
               </div>
-              <div className="min-w-0">
-                <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate">Chat General</h3>
-                <p className="text-xs sm:text-sm text-gray-500">{onlineAdmins.length} admin{onlineAdmins.length !== 1 ? 'i' : ''} online</p>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-800 text-xs sm:text-sm truncate">Chat General</h3>
+                <p className="text-[10px] sm:text-xs text-gray-500">{onlineAdmins.filter(a => a.isOnline).length} online</p>
               </div>
             </>
           ) : (
             <>
               {(() => {
                 const admin = allAdmins.find(a => a.id === selectedChat);
-                return admin ? (
+                // Obține datele actualizate din onlineAdmins
+                const adminData = onlineAdmins.find(a => a.id === selectedChat) || admin;
+                return adminData ? (
                   <>
-                    {admin.image ? (
-                      <img src={admin.image} alt="" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0" />
+                    {adminData.image ? (
+                      <img src={adminData.image} alt="" className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover flex-shrink-0" />
                     ) : (
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${getAvatarColor(admin.email)} flex items-center justify-center text-white font-bold shadow-md text-sm sm:text-base flex-shrink-0`}>
-                        {getInitials(admin.name, admin.email)}
+                      <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br ${getAvatarColor(adminData.email)} flex items-center justify-center text-white font-bold shadow-md text-xs sm:text-sm flex-shrink-0`}>
+                        {getInitials(adminData.name, adminData.email)}
                       </div>
                     )}
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base truncate">{admin.name || admin.email}</h3>
-                      <p className="text-xs sm:text-sm">
-                        {isOnline(admin.email) ? (
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{adminData.name || adminData.email}</h3>
+                      <p className="text-[10px] sm:text-xs">
+                        {isOnline(adminData.email) ? (
                           <span className="text-green-600">Online</span>
                         ) : (
                           <span className="text-gray-500">Offline</span>
@@ -585,46 +589,58 @@ export default function AdminChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 bg-gray-50" onClick={() => setMessageMenu(null)}>
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gray-50" onClick={() => setMessageMenu(null)}>
           {Object.entries(groupedMessages).map(([date, dayMessages]) => (
             <div key={date}>
-              <div className="flex justify-center mb-3 sm:mb-4">
-                <span className="px-2 sm:px-3 py-1 bg-gray-200 text-gray-600 text-xs rounded-full">
+              <div className="flex justify-center mb-2 sm:mb-3">
+                <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] sm:text-xs rounded-full">
                   {formatDate(dayMessages[0].createdAt)}
                 </span>
               </div>
               {dayMessages.map((message) => {
                 const isOwnMessage = message.senderEmail === session?.user?.email;
                 const isEditing = editingMessage === message.id;
+                // Obține datele actualizate ale expeditorului
+                const senderData = onlineAdmins.find(a => a.email === message.senderEmail);
+                const senderImage = senderData?.image || message.senderImage;
+                const senderName = senderData?.name || message.senderName;
                 return (
                   <div
                     key={message.id}
-                    className={`flex items-end gap-1.5 sm:gap-2 mb-2 sm:mb-3 ${isOwnMessage ? 'flex-row-reverse' : ''} group`}
+                    className={`flex items-end gap-1 sm:gap-1.5 mb-1.5 sm:mb-2 ${isOwnMessage ? 'flex-row-reverse' : ''} group`}
                   >
                     {/* Avatar */}
                     {!isOwnMessage && (
-                      message.senderImage ? (
+                      senderImage ? (
                         <img
-                          src={message.senderImage}
-                          alt={message.senderName}
-                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
+                          src={senderImage}
+                          alt={senderName}
+                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br ${getAvatarColor(message.senderEmail)} flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shadow-md flex-shrink-0`}>
-                          {getInitials(message.senderName, message.senderEmail)}
+                        <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br ${getAvatarColor(message.senderEmail)} flex items-center justify-center text-white text-[9px] sm:text-[10px] font-bold shadow-md flex-shrink-0`}>
+                          {getInitials(senderName, message.senderEmail)}
                         </div>
                       )
                     )}
                     
                     {/* Message bubble */}
-                    <div className={`max-w-[75%] sm:max-w-xs md:max-w-md lg:max-w-lg ${isOwnMessage ? 'items-end' : 'items-start'} relative`}>
+                    <div 
+                      className={`max-w-[80%] sm:max-w-[75%] md:max-w-md ${isOwnMessage ? 'items-end' : 'items-start'} relative`}
+                      onContextMenu={(e) => {
+                        if (isOwnMessage && !isEditing) {
+                          e.preventDefault();
+                          setMessageMenu(message.id);
+                        }
+                      }}
+                    >
                       {!isOwnMessage && (
-                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1 ml-1">{message.senderName}</p>
+                        <p className="text-[9px] sm:text-[10px] text-gray-500 mb-0.5 ml-1 truncate max-w-[150px] sm:max-w-none">{senderName}</p>
                       )}
                       
-                      {/* Meniu acțiuni pentru mesajele proprii */}
+                      {/* Meniu acțiuni pentru mesajele proprii - vizibil pe hover sau când e activ */}
                       {isOwnMessage && !isEditing && (
-                        <div className={`absolute ${isOwnMessage ? 'left-0 -translate-x-full pr-1' : 'right-0 translate-x-full pl-1'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                        <div className={`absolute ${isOwnMessage ? 'left-0 -translate-x-full pr-0.5' : 'right-0 translate-x-full pl-0.5'} top-1/2 -translate-y-1/2 ${messageMenu === message.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -632,14 +648,14 @@ export default function AdminChatPage() {
                             }}
                             className="p-1 text-gray-400 hover:text-gray-600 rounded"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                             </svg>
                           </button>
                           
                           {/* Dropdown meniu */}
                           {messageMenu === message.id && (
-                            <div className="absolute right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[100px]">
+                            <div className="absolute right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[90px]">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -647,9 +663,9 @@ export default function AdminChatPage() {
                                   setEditContent(message.content);
                                   setMessageMenu(null);
                                 }}
-                                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                                className="w-full px-2.5 py-1 text-left text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-1.5"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                                 Editează
@@ -660,9 +676,9 @@ export default function AdminChatPage() {
                                   handleDeleteMessage(message.id);
                                   setMessageMenu(null);
                                 }}
-                                className="w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                className="w-full px-2.5 py-1 text-left text-xs text-red-600 hover:bg-red-50 flex items-center gap-1.5"
                               >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                                 Șterge
@@ -673,7 +689,7 @@ export default function AdminChatPage() {
                       )}
                       
                       <div
-                        className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl ${
+                        className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-2xl ${
                           isOwnMessage
                             ? 'bg-amber-500 text-white rounded-br-sm'
                             : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
@@ -683,19 +699,19 @@ export default function AdminChatPage() {
                           <img 
                             src={message.imageUrl} 
                             alt="Imagine" 
-                            className="max-w-full max-h-48 sm:max-h-64 rounded-lg mb-1 sm:mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                            className="max-w-full max-h-40 sm:max-h-56 rounded-lg mb-1 cursor-pointer hover:opacity-90 transition-opacity"
                             onClick={() => setEnlargedImage(message.imageUrl)}
                           />
                         )}
                         
                         {/* Mod editare */}
                         {isEditing ? (
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-1.5">
                             <input
                               type="text"
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
-                              className="px-2 py-1 rounded text-gray-900 text-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                              className="px-2 py-1 rounded text-gray-900 text-xs sm:text-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleEditMessage(message.id);
@@ -711,13 +727,13 @@ export default function AdminChatPage() {
                                   setEditingMessage(null);
                                   setEditContent('');
                                 }}
-                                className="px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                className="px-1.5 py-0.5 text-[10px] sm:text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
                               >
                                 Anulează
                               </button>
                               <button
                                 onClick={() => handleEditMessage(message.id)}
-                                className="px-2 py-0.5 text-xs bg-white text-amber-600 rounded hover:bg-amber-50"
+                                className="px-1.5 py-0.5 text-[10px] sm:text-xs bg-white text-amber-600 rounded hover:bg-amber-50"
                               >
                                 Salvează
                               </button>
@@ -726,14 +742,14 @@ export default function AdminChatPage() {
                         ) : (
                           <>
                             {message.content && message.content !== '📷 Imagine' && (
-                              <p className="break-words text-sm sm:text-base">{message.content}</p>
+                              <p className="break-words text-xs sm:text-sm">{message.content}</p>
                             )}
                           </>
                         )}
                       </div>
-                      <p className={`text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 ${isOwnMessage ? 'text-right mr-1' : 'ml-1'}`}>
+                      <p className={`text-[9px] sm:text-[10px] text-gray-400 mt-0.5 ${isOwnMessage ? 'text-right mr-0.5' : 'ml-0.5'}`}>
                         {formatTime(message.createdAt)}
-                        {message.isEdited && <span className="ml-1">(editat)</span>}
+                        {message.isEdited && <span className="ml-0.5">(editat)</span>}
                       </p>
                     </div>
                   </div>
@@ -745,9 +761,9 @@ export default function AdminChatPage() {
           {messages.length === 0 && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-gray-500">
-                <p className="text-3xl sm:text-4xl mb-2">💬</p>
-                <p className="text-sm sm:text-base">Niciun mesaj încă</p>
-                <p className="text-xs sm:text-sm">Începe conversația!</p>
+                <p className="text-2xl sm:text-3xl mb-2">💬</p>
+                <p className="text-xs sm:text-sm">Niciun mesaj încă</p>
+                <p className="text-[10px] sm:text-xs">Începe conversația!</p>
               </div>
             </div>
           )}
@@ -757,16 +773,16 @@ export default function AdminChatPage() {
 
         {/* Image Preview */}
         {imagePreview && (
-          <div className="p-2 sm:p-3 bg-white border-t border-gray-200">
+          <div className="p-1.5 sm:p-2 bg-white border-t border-gray-200">
             <div className="relative inline-block">
-              <img src={imagePreview} alt="Preview" className="h-16 sm:h-20 rounded-lg" />
+              <img src={imagePreview} alt="Preview" className="h-12 sm:h-16 rounded-lg" />
               <button 
                 onClick={() => {
                   setImagePreview(null);
                   if (fileInputRef.current) fileInputRef.current.value = '';
                   if (cameraInputRef.current) cameraInputRef.current.value = '';
                 }}
-                className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 text-sm"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 text-xs"
               >
                 ×
               </button>
@@ -775,8 +791,8 @@ export default function AdminChatPage() {
         )}
 
         {/* Message Input */}
-        <form onSubmit={handleSendMessage} className="p-2 sm:p-4 bg-white border-t border-gray-200">
-          <div className="flex items-center gap-1 sm:gap-2">
+        <form onSubmit={handleSendMessage} className="p-1.5 sm:p-3 bg-white border-t border-gray-200">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {/* File upload button */}
             <input 
               type="file" 
@@ -788,10 +804,10 @@ export default function AdminChatPage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-1.5 sm:p-2 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               title="Încarcă imagine"
             >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
@@ -808,7 +824,7 @@ export default function AdminChatPage() {
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="p-1.5 sm:p-2 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 sm:hidden"
+              className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 sm:hidden"
               title="Fă o poză"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -821,10 +837,10 @@ export default function AdminChatPage() {
             <button
               type="button"
               onClick={() => cameraInputRef.current?.click()}
-              className="hidden sm:block p-2 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              className="hidden sm:block p-1.5 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
               title="Fă o poză"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
@@ -835,23 +851,23 @@ export default function AdminChatPage() {
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Scrie un mesaj..."
-              className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-full focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm sm:text-base min-w-0 text-gray-900 placeholder:text-gray-500"
+              placeholder="Scrie..."
+              className="flex-1 px-2.5 sm:px-3 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-xs sm:text-sm min-w-0 text-gray-900 placeholder:text-gray-400"
             />
 
             {/* Send button */}
             <button
               type="submit"
               disabled={(!newMessage.trim() && !imagePreview) || uploadingImage}
-              className="p-1.5 sm:p-2 bg-amber-500 text-white rounded-full hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              className="p-1.5 bg-amber-500 text-white rounded-full hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
             >
               {uploadingImage ? (
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               )}
@@ -863,14 +879,14 @@ export default function AdminChatPage() {
       {/* Modal pentru imaginea mărită */}
       {enlargedImage && (
         <div 
-          className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-2 sm:p-4"
           onClick={() => setEnlargedImage(null)}
         >
           <button
             onClick={() => setEnlargedImage(null)}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+            className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
