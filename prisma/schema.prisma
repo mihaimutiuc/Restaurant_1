@@ -180,3 +180,26 @@ model Testimonial {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// Chat models for admin messaging
+model Message {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  senderId    String   @db.ObjectId
+  senderName  String
+  senderEmail String?
+  senderImage String?
+  receiverId  String?  @db.ObjectId // null pentru mesaje de grup
+  imageUrl    String?  // URL pentru imagini atașate
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AdminStatus {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  oderId     String   @unique @db.ObjectId
+  email      String   @unique
+  isOnline   Boolean  @default(false)
+  lastSeen   DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

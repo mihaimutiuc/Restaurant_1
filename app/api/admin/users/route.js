@@ -41,12 +41,20 @@ export async function GET() {
   }
 }
 
+// Super admin email
+const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
+
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions)
     
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    
+    // Doar super admin poate crea alți admini
+    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+      return NextResponse.json({ error: "Doar Super Admin poate adăuga administratori" }, { status: 403 })
     }
 
     const currentUser = await prisma.user.findUnique({

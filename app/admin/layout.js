@@ -11,11 +11,29 @@ export default function AdminLayout({ children }) {
   const router = useRouter()
   const pathname = usePathname()
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
+
+  // Super admin email
+  const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
 
   // Check if we're on the login page
   const isLoginPage = pathname === "/admin/login"
+
+  // Fetch unread messages count
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await fetch('/api/admin/messages/unread')
+      if (res.ok) {
+        const data = await res.json()
+        setUnreadMessages(data.unreadCount || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error)
+    }
+  }
 
   useEffect(() => {
     async function checkAdmin() {
@@ -38,6 +56,12 @@ export default function AdminLayout({ children }) {
         
         if (data.isAdmin) {
           setIsAdmin(true)
+          // Verifică dacă este super admin
+          if (session.user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+            setIsSuperAdmin(true)
+          }
+          // Fetch unread messages
+          fetchUnreadCount()
         } else {
           router.push("/admin/login")
         }
@@ -50,6 +74,14 @@ export default function AdminLayout({ children }) {
 
     checkAdmin()
   }, [session, status, router, isLoginPage])
+
+  // Poll for unread messages
+  useEffect(() => {
+    if (!isAdmin || isLoginPage) return
+
+    const interval = setInterval(fetchUnreadCount, 10000) // Check every 10 seconds
+    return () => clearInterval(interval)
+  }, [isAdmin, isLoginPage])
 
   // For login page, render children directly without admin layout
   if (isLoginPage) {
@@ -79,7 +111,9 @@ export default function AdminLayout({ children }) {
     { name: "Comenzi", href: "/admin/orders", icon: OrdersIcon },
     { name: "Produse", href: "/admin/products", icon: ProductsIcon },
     { name: "Testimoniale", href: "/admin/testimonials", icon: TestimonialsIcon },
-    { name: "Administratori", href: "/admin/users", icon: UsersIcon },
+    { name: "Chat", href: "/admin/chat", icon: ChatIcon, badge: unreadMessages },
+    // Administratori - vizibil doar pentru super admin
+    ...(isSuperAdmin ? [{ name: "Administratori", href: "/admin/users", icon: UsersIcon }] : []),
   ]
 
   return (
@@ -129,6 +163,15 @@ export default function AdminLayout({ children }) {
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.name}</span>
+                  {item.badge > 0 && (
+                    <span className={`ml-auto px-2 py-0.5 text-xs font-bold rounded-full ${
+                      isActive 
+                        ? "bg-white text-orange-500" 
+                        : "bg-orange-500 text-white"
+                    }`}>
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}
@@ -254,6 +297,14 @@ function UsersIcon({ className }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  )
+}
+
+function ChatIcon({ className }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
     </svg>
   )
 }

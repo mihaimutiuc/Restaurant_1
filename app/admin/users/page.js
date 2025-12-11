@@ -1,12 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 
 // Super admin that cannot be deleted
-const SUPER_ADMIN_EMAIL = "mihai.mutiuc@gmail.com"
+const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
 
 export default function AdminUsersPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [admins, setAdmins] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -17,6 +21,18 @@ export default function AdminUsersPage() {
     method: "google" // "google" or "credentials"
   })
   const [error, setError] = useState("")
+  
+  // Verifică dacă utilizatorul curent este super admin
+  const isSuperAdminUser = session?.user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
+
+  // Redirecționează dacă nu este super admin
+  useEffect(() => {
+    if (status === "loading") return
+    
+    if (!session || session.user?.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+      router.push("/admin/dashboard")
+    }
+  }, [session, status, router])
 
   const fetchAdmins = async () => {
     try {
@@ -93,13 +109,18 @@ export default function AdminUsersPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || status === "loading") {
     return (
       <div className="animate-pulse space-y-6">
         <div className="bg-white rounded-2xl p-6 h-20"></div>
         <div className="bg-white rounded-2xl p-6 h-96"></div>
       </div>
     )
+  }
+
+  // Nu afișa nimic dacă nu este super admin
+  if (!isSuperAdminUser) {
+    return null
   }
 
   return (
@@ -111,15 +132,17 @@ export default function AdminUsersPage() {
             <h1 className="text-2xl font-bold text-gray-900">Gestionare Administratori</h1>
             <p className="text-gray-500 mt-1">Adaugă sau elimină admini care pot gestiona restaurantul</p>
           </div>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Adaugă admin
-          </button>
+          {isSuperAdminUser && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Adaugă admin
+            </button>
+          )}
         </div>
       </div>
 
@@ -174,15 +197,17 @@ export default function AdminUsersPage() {
                       <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
                         Admin
                       </span>
-                      <button
-                        onClick={() => handleRemoveAdmin(admin.id, admin.name || admin.email, admin.email)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Elimină drepturi admin"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      {isSuperAdminUser && (
+                        <button
+                          onClick={() => handleRemoveAdmin(admin.id, admin.name || admin.email, admin.email)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Elimină drepturi admin"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
                     </>
                   )}
                 </div>

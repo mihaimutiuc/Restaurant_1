@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // Super admin email that cannot be deleted
-const SUPER_ADMIN_EMAIL = "mihai.mutiuc@gmail.com"
+const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
 
 export async function DELETE(request, { params }) {
   try {
@@ -12,6 +12,11 @@ export async function DELETE(request, { params }) {
     
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Doar super admin poate elimina alți admini
+    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+      return NextResponse.json({ error: "Doar Super Admin poate elimina administratori" }, { status: 403 })
     }
 
     const currentUser = await prisma.user.findUnique({
