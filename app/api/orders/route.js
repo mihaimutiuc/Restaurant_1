@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 // Funcție pentru a calcula stage-ul bazat pe timp
 function calculateStage(elapsedMinutes, totalTime, currentStage, status) {

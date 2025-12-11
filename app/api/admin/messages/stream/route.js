@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 // GET - Server-Sent Events pentru mesaje în timp real
 export async function GET(request) {
