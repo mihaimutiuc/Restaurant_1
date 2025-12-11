@@ -101,22 +101,22 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Gestionare Comenzi</h1>
+      <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Gestionare Comenzi</h1>
         
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {/* Search */}
-          <div className="relative flex-1">
+          <div className="relative">
             <input
               type="text"
-              placeholder="Caută după ID, telefon, adresă, nume..."
+              placeholder="Caută după ID, telefon, adresă..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
-            <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -127,7 +127,7 @@ export default function AdminOrdersPage() {
               <button
                 key={option.value}
                 onClick={() => setFilter(option.value)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all ${
                   filter === option.value
                     ? "bg-orange-500 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -140,10 +140,100 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Orders */}
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {orders.length > 0 ? (
-          <div className="overflow-x-auto">
+          <>
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {orders.map((order) => (
+                <div key={order.id} className="p-3 sm:p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {order.user?.image ? (
+                        <Image 
+                          src={order.user.image} 
+                          alt={order.user.name || ""} 
+                          width={32} 
+                          height={32} 
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                          <span className="text-orange-600 font-medium text-xs">
+                            {order.user?.name?.charAt(0) || "?"}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-xs font-mono text-gray-500">#{order.id.slice(-6)}</span>
+                        <p className="text-sm font-medium text-gray-900">{order.user?.name || "N/A"}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-gray-900">{order.total} RON</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-2">
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleUpdateOrder(order.id, { status: e.target.value })}
+                      className={`px-2 py-1 rounded-lg text-xs font-medium border ${statusColors[order.status]} cursor-pointer`}
+                    >
+                      <option value="PENDING">În așteptare</option>
+                      <option value="CONFIRMED">Confirmată</option>
+                      <option value="COMPLETED">Finalizată</option>
+                      <option value="CANCELLED">Anulată</option>
+                    </select>
+                    <span className="text-xs text-gray-500">
+                      {new Date(order.createdAt).toLocaleDateString('ro-RO', { 
+                        day: '2-digit', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-1">
+                      {order.items?.slice(0, 3).map((item, idx) => (
+                        <div key={idx} className="w-6 h-6 rounded-full bg-gray-100 border border-white overflow-hidden">
+                          {item.image ? (
+                            <Image 
+                              src={item.image} 
+                              alt={item.name} 
+                              width={24} 
+                              height={24} 
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-orange-100"></div>
+                          )}
+                        </div>
+                      ))}
+                      {order.items?.length > 3 && (
+                        <span className="text-xs text-gray-500 ml-1">+{order.items.length - 3}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedOrder(order)
+                        setShowModal(true)
+                      }}
+                      className="text-orange-500 hover:text-orange-600 font-medium text-xs flex items-center gap-1"
+                    >
+                      Detalii
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
@@ -276,78 +366,79 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
+          </>
         ) : (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-8 sm:p-12 text-center">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <p className="text-gray-500">Nu există comenzi care să corespundă filtrelor</p>
+            <p className="text-gray-500 text-sm sm:text-base">Nu există comenzi care să corespundă filtrelor</p>
           </div>
         )}
       </div>
 
       {/* Order Details Modal */}
       {showModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
-              <h2 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                 Comandă #{selectedOrder.id.slice(-6)}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full hover:bg-gray-100 flex items-center justify-center"
               >
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Customer Info */}
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl">
                 {selectedOrder.user?.image ? (
                   <Image 
                     src={selectedOrder.user.image} 
                     alt={selectedOrder.user.name || ""} 
-                    width={48} 
-                    height={48} 
+                    width={40} 
+                    height={40} 
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span className="text-orange-600 font-medium">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <span className="text-orange-600 font-medium text-sm sm:text-base">
                       {selectedOrder.user?.name?.charAt(0) || "?"}
                     </span>
                   </div>
                 )}
-                <div>
-                  <p className="font-medium text-gray-900">{selectedOrder.user?.name || "N/A"}</p>
-                  <p className="text-sm text-gray-500">{selectedOrder.user?.email}</p>
-                  <p className="text-sm text-gray-500">{selectedOrder.phone}</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{selectedOrder.user?.name || "N/A"}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">{selectedOrder.user?.email}</p>
+                  <p className="text-xs sm:text-sm text-gray-500">{selectedOrder.phone}</p>
                 </div>
               </div>
 
               {/* Delivery Address */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Adresă de livrare</h3>
-                <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">{selectedOrder.deliveryAddress || "N/A"}</p>
+                <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Adresă de livrare</h3>
+                <p className="text-gray-600 bg-gray-50 p-3 rounded-lg text-sm sm:text-base">{selectedOrder.deliveryAddress || "N/A"}</p>
               </div>
 
               {/* Customer Notes */}
               {selectedOrder.notes && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Notă de la client</h3>
-                  <p className="text-gray-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200">{selectedOrder.notes}</p>
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Notă de la client</h3>
+                  <p className="text-gray-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200 text-sm sm:text-base">{selectedOrder.notes}</p>
                 </div>
               )}
 
               {/* Products */}
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Produse comandate</h3>
+                <h3 className="font-semibold text-gray-900 mb-3 text-sm sm:text-base">Produse comandate</h3>
                 <div className="space-y-3">
                   {selectedOrder.items?.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
