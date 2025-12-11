@@ -228,9 +228,9 @@ export default function AdminChatPage() {
     const file = e.target.files?.[0];
     if (file) {
       // Validare tip
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
       if (!validTypes.includes(file.type)) {
-        alert('Tip de fișier invalid. Doar imagini (JPG, PNG, WebP, GIF).');
+        alert('Tip de fișier invalid. Doar imagini (JPG, PNG, WebP, GIF, AVIF).');
         return;
       }
       // Validare dimensiune
