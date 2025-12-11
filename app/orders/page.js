@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, Suspense } from "react"
 import Link from "next/link"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
@@ -254,7 +254,8 @@ function OrderCard({ order, isNew }) {
   )
 }
 
-export default function OrdersPage() {
+// Componenta principală care folosește useSearchParams
+function OrdersContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -431,5 +432,30 @@ export default function OrdersPage() {
       
       <Footer />
     </main>
+  )
+}
+
+// Loading fallback pentru Suspense
+function OrdersLoading() {
+  return (
+    <main className="min-h-screen">
+      <Navbar cartItemsCount={0} />
+      <div className="pt-24 pb-20 min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <div className="text-lg text-gray-600">Se încarcă comenzile...</div>
+        </div>
+      </div>
+      <Footer />
+    </main>
+  )
+}
+
+// Export default cu Suspense wrapper
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<OrdersLoading />}>
+      <OrdersContent />
+    </Suspense>
   )
 }
