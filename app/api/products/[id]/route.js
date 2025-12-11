@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
+export const dynamic = 'force-dynamic'
+
 // GET - Obține un produs specific după ID (accepts both MongoDB ObjectId and productId)
 export async function GET(request, { params }) {
   try {

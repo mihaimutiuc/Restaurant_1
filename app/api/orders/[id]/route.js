@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 
+export const dynamic = 'force-dynamic'
+
 // Funcție pentru a calcula stage-ul bazat pe timp
 function calculateStage(elapsedMinutes, totalTime, currentStage, status) {
   // Nu actualiza dacă comanda e anulată sau finalizată
