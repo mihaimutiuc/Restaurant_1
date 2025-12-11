@@ -110,12 +110,13 @@ export async function GET(request) {
 
     const statuses = await prisma.adminStatus.findMany()
 
-    // Combină datele
+    // Combină datele - verifică dacă lastSeen este în ultimele 30 secunde
     const adminsWithStatus = admins.map(admin => {
       const status = statuses.find(s => s.oderId === admin.id)
+      const thirtySecondsAgo = Date.now() - 30000
       const isOnline = status?.isOnline && 
-        status?.updatedAt && 
-        new Date(status.updatedAt).getTime() > Date.now() - 60000 // 1 minut
+        status?.lastSeen && 
+        new Date(status.lastSeen).getTime() > thirtySecondsAgo
       
       return {
         ...admin,

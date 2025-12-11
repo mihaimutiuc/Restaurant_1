@@ -87,13 +87,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "Mesajul nu poate fi gol" }, { status: 400 })
     }
 
+    // Folosește datele din baza de date (actualizate de Google login)
     const message = await prisma.message.create({
       data: {
         content: content?.trim() || '',
         senderId: currentUser.id,
-        senderName: currentUser.name || session.user.email,
+        senderName: currentUser.name || currentUser.email,
         senderEmail: currentUser.email,
-        senderImage: currentUser.image || session.user.image,
+        senderImage: currentUser.image, // Folosește imaginea din DB
         receiverId: receiverId || null,
         imageUrl: imageUrl || null
       }

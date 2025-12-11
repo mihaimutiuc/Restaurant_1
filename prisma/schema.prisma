@@ -192,6 +192,7 @@ model Message {
   receiverId  String?  @db.ObjectId // null pentru mesaje de grup
   imageUrl    String?  // URL pentru imagini atașate
   isRead      Boolean  @default(false)
+  isEdited    Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
 

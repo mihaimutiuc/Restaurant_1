@@ -17,6 +17,10 @@ export default function AdminChatPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Pentru mobile
   const [enlargedImage, setEnlargedImage] = useState(null); // Pentru zoom imagine
+  const [unreadByChat, setUnreadByChat] = useState({}); // Mesaje necitite per chat
+  const [editingMessage, setEditingMessage] = useState(null); // Mesajul în curs de editare
+  const [editContent, setEditContent] = useState(''); // Conținutul editat
+  const [messageMenu, setMessageMenu] = useState(null); // ID-ul mesajului cu meniu deschis
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -151,6 +155,63 @@ export default function AdminChatPage() {
     }
   };
 
+  // Fetch mesaje necitite
+  const fetchUnreadMessages = async () => {
+    try {
+      const res = await fetch('/api/admin/messages/unread');
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadByChat(data.unreadByChat || {});
+      }
+    } catch (error) {
+      console.error('Eroare la încărcarea mesajelor necitite:', error);
+    }
+  };
+
+  // Editează mesaj
+  const handleEditMessage = async (messageId) => {
+    if (!editContent.trim()) return;
+    
+    try {
+      const res = await fetch(`/api/admin/messages/${messageId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: editContent }),
+      });
+      
+      if (res.ok) {
+        setEditingMessage(null);
+        setEditContent('');
+        fetchMessages();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Eroare la editare');
+      }
+    } catch (error) {
+      console.error('Eroare la editarea mesajului:', error);
+    }
+  };
+
+  // Șterge mesaj
+  const handleDeleteMessage = async (messageId) => {
+    if (!confirm('Sigur vrei să ștergi acest mesaj?')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/messages/${messageId}`, {
+        method: 'DELETE',
+      });
+      
+      if (res.ok) {
+        fetchMessages();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Eroare la ștergere');
+      }
+    } catch (error) {
+      console.error('Eroare la ștergerea mesajului:', error);
+    }
+  };
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
@@ -162,13 +223,17 @@ export default function AdminChatPage() {
       fetchOnlineStatus();
       fetchAllAdmins();
       updateOnlineStatus();
+      fetchUnreadMessages();
 
       // Polling pentru mesaje și status
-      const messageInterval = setInterval(fetchMessages, 3000);
+      const messageInterval = setInterval(() => {
+        fetchMessages();
+        fetchUnreadMessages();
+      }, 3000);
       const statusInterval = setInterval(() => {
         fetchOnlineStatus();
         updateOnlineStatus();
-      }, 10000);
+      }, 15000); // Update status la fiecare 15 secunde
 
       // Cleanup la unmount
       return () => {
@@ -286,7 +351,8 @@ export default function AdminChatPage() {
   };
 
   const isOnline = (email) => {
-    return onlineAdmins.some(admin => admin.email === email);
+    const admin = onlineAdmins.find(a => a.email === email);
+    return admin?.isOnline || false;
   };
 
   const formatTime = (date) => {
@@ -385,8 +451,19 @@ export default function AdminChatPage() {
             👥
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-800 text-sm sm:text-base">Chat General</p>
-            <p className="text-xs sm:text-sm text-gray-500">{onlineAdmins.length} admini online</p>
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-gray-800 text-sm sm:text-base">Chat General</p>
+              {unreadByChat['general']?.count > 0 && selectedChat !== 'general' && (
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                  {unreadByChat['general'].count}
+                </span>
+              )}
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500">
+              {unreadByChat['general']?.count > 0 && selectedChat !== 'general' 
+                ? `${unreadByChat['general'].senderName}: mesaj nou`
+                : `${onlineAdmins.filter(a => a.isOnline).length} admini online`}
+            </p>
           </div>
         </div>
 
@@ -396,42 +473,54 @@ export default function AdminChatPage() {
 
         {/* Lista de admini pentru mesaje private */}
         <div className="flex-1 overflow-y-auto">
-          {otherAdmins.map(admin => (
-            <div 
-              key={admin.id}
-              onClick={() => handleSelectChat(admin.id)}
-              className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 sm:gap-3 ${
-                selectedChat === admin.id ? 'bg-amber-50 border-l-4 border-amber-500' : ''
-              }`}
-            >
-              <div className="relative flex-shrink-0">
-                {admin.image ? (
-                  <img 
-                    src={admin.image} 
-                    alt={admin.name || admin.email}
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${getAvatarColor(admin.email)} flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md`}>
-                    {getInitials(admin.name, admin.email)}
-                  </div>
-                )}
-                {isOnline(admin.email) && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full"></span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-800 truncate text-sm sm:text-base">{admin.name || admin.email}</p>
-                <p className="text-xs sm:text-sm text-gray-500 truncate">
-                  {isOnline(admin.email) ? (
-                    <span className="text-green-600">Online</span>
+          {otherAdmins.map(admin => {
+            const adminUnread = unreadByChat[admin.id];
+            return (
+              <div 
+                key={admin.id}
+                onClick={() => handleSelectChat(admin.id)}
+                className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 sm:gap-3 ${
+                  selectedChat === admin.id ? 'bg-amber-50 border-l-4 border-amber-500' : ''
+                }`}
+              >
+                <div className="relative flex-shrink-0">
+                  {admin.image ? (
+                    <img 
+                      src={admin.image} 
+                      alt={admin.name || admin.email}
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                    />
                   ) : (
-                    'Offline'
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${getAvatarColor(admin.email)} flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md`}>
+                      {getInitials(admin.name, admin.email)}
+                    </div>
                   )}
-                </p>
+                  {isOnline(admin.email) && (
+                    <span className="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full"></span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-gray-800 truncate text-sm sm:text-base">{admin.name || admin.email}</p>
+                    {adminUnread?.count > 0 && selectedChat !== admin.id && (
+                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                        {adminUnread.count}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-500 truncate">
+                    {adminUnread?.count > 0 && selectedChat !== admin.id ? (
+                      <span className="text-gray-700 font-medium">Mesaj nou</span>
+                    ) : isOnline(admin.email) ? (
+                      <span className="text-green-600">Online</span>
+                    ) : (
+                      'Offline'
+                    )}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           {otherAdmins.length === 0 && (
             <div className="p-4 text-center text-gray-500 text-sm">
@@ -496,7 +585,7 @@ export default function AdminChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 bg-gray-50" onClick={() => setMessageMenu(null)}>
           {Object.entries(groupedMessages).map(([date, dayMessages]) => (
             <div key={date}>
               <div className="flex justify-center mb-3 sm:mb-4">
@@ -506,10 +595,11 @@ export default function AdminChatPage() {
               </div>
               {dayMessages.map((message) => {
                 const isOwnMessage = message.senderEmail === session?.user?.email;
+                const isEditing = editingMessage === message.id;
                 return (
                   <div
                     key={message.id}
-                    className={`flex items-end gap-1.5 sm:gap-2 mb-2 sm:mb-3 ${isOwnMessage ? 'flex-row-reverse' : ''}`}
+                    className={`flex items-end gap-1.5 sm:gap-2 mb-2 sm:mb-3 ${isOwnMessage ? 'flex-row-reverse' : ''} group`}
                   >
                     {/* Avatar */}
                     {!isOwnMessage && (
@@ -527,10 +617,61 @@ export default function AdminChatPage() {
                     )}
                     
                     {/* Message bubble */}
-                    <div className={`max-w-[75%] sm:max-w-xs md:max-w-md lg:max-w-lg ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+                    <div className={`max-w-[75%] sm:max-w-xs md:max-w-md lg:max-w-lg ${isOwnMessage ? 'items-end' : 'items-start'} relative`}>
                       {!isOwnMessage && (
                         <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1 ml-1">{message.senderName}</p>
                       )}
+                      
+                      {/* Meniu acțiuni pentru mesajele proprii */}
+                      {isOwnMessage && !isEditing && (
+                        <div className={`absolute ${isOwnMessage ? 'left-0 -translate-x-full pr-1' : 'right-0 translate-x-full pl-1'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMessageMenu(messageMenu === message.id ? null : message.id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                          </button>
+                          
+                          {/* Dropdown meniu */}
+                          {messageMenu === message.id && (
+                            <div className="absolute right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[100px]">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingMessage(message.id);
+                                  setEditContent(message.content);
+                                  setMessageMenu(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Editează
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMessage(message.id);
+                                  setMessageMenu(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Șterge
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <div
                         className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl ${
                           isOwnMessage
@@ -546,12 +687,53 @@ export default function AdminChatPage() {
                             onClick={() => setEnlargedImage(message.imageUrl)}
                           />
                         )}
-                        {message.content && message.content !== '📷 Imagine' && (
-                          <p className="break-words text-sm sm:text-base">{message.content}</p>
+                        
+                        {/* Mod editare */}
+                        {isEditing ? (
+                          <div className="flex flex-col gap-2">
+                            <input
+                              type="text"
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="px-2 py-1 rounded text-gray-900 text-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleEditMessage(message.id);
+                                if (e.key === 'Escape') {
+                                  setEditingMessage(null);
+                                  setEditContent('');
+                                }
+                              }}
+                            />
+                            <div className="flex gap-1 justify-end">
+                              <button
+                                onClick={() => {
+                                  setEditingMessage(null);
+                                  setEditContent('');
+                                }}
+                                className="px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                              >
+                                Anulează
+                              </button>
+                              <button
+                                onClick={() => handleEditMessage(message.id)}
+                                className="px-2 py-0.5 text-xs bg-white text-amber-600 rounded hover:bg-amber-50"
+                              >
+                                Salvează
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {message.content && message.content !== '📷 Imagine' && (
+                              <p className="break-words text-sm sm:text-base">{message.content}</p>
+                            )}
+                          </>
                         )}
                       </div>
                       <p className={`text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 ${isOwnMessage ? 'text-right mr-1' : 'ml-1'}`}>
                         {formatTime(message.createdAt)}
+                        {message.isEdited && <span className="ml-1">(editat)</span>}
                       </p>
                     </div>
                   </div>
