@@ -16,6 +16,7 @@ export default function AdminChatPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Pentru mobile
+  const [enlargedImage, setEnlargedImage] = useState(null); // Pentru zoom imagine
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -541,8 +542,8 @@ export default function AdminChatPage() {
                           <img 
                             src={message.imageUrl} 
                             alt="Imagine" 
-                            className="max-w-full max-h-48 sm:max-h-64 rounded-lg mb-1 sm:mb-2 cursor-pointer hover:opacity-90"
-                            onClick={() => window.open(message.imageUrl, '_blank')}
+                            className="max-w-full max-h-48 sm:max-h-64 rounded-lg mb-1 sm:mb-2 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setEnlargedImage(message.imageUrl)}
                           />
                         )}
                         {message.content && message.content !== '📷 Imagine' && (
@@ -653,7 +654,7 @@ export default function AdminChatPage() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Scrie un mesaj..."
-              className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-full focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm sm:text-base min-w-0"
+              className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-full focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm sm:text-base min-w-0 text-gray-900 placeholder:text-gray-500"
             />
 
             {/* Send button */}
@@ -676,6 +677,29 @@ export default function AdminChatPage() {
           </div>
         </form>
       </div>
+
+      {/* Modal pentru imaginea mărită */}
+      {enlargedImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4"
+          onClick={() => setEnlargedImage(null)}
+        >
+          <button
+            onClick={() => setEnlargedImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img 
+            src={enlargedImage} 
+            alt="Imagine mărită" 
+            className="max-w-full max-h-full object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
