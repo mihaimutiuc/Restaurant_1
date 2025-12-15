@@ -21,6 +21,7 @@ export default function AdminChatPage() {
   const [editingMessage, setEditingMessage] = useState(null); // Mesajul în curs de editare
   const [editContent, setEditContent] = useState(''); // Conținutul editat
   const [messageMenu, setMessageMenu] = useState(null); // ID-ul mesajului cu meniu deschis
+  const [sending, setSending] = useState(false); // Previne trimiterea multiplă
   
   // Grupuri
   const [groups, setGroups] = useState([]);
@@ -403,16 +404,26 @@ export default function AdminChatPage() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
+    // Previne trimiterea multiplă
+    if (sending) return;
+    
     // Dacă suntem în mod editare, salvăm editarea
     if (editingMessage) {
       if (!newMessage.trim()) return;
-      await handleEditMessage(editingMessage);
-      setNewMessage('');
+      setSending(true);
+      try {
+        await handleEditMessage(editingMessage);
+        setNewMessage('');
+      } finally {
+        setSending(false);
+      }
       return;
     }
     
     if ((!newMessage.trim() && !imagePreview) || !session?.user) return;
 
+    setSending(true);
+    
     // Folosește imagePreview direct (este deja base64)
     let imageUrl = imagePreview;
 
@@ -446,9 +457,16 @@ export default function AdminChatPage() {
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (cameraInputRef.current) cameraInputRef.current.value = '';
         fetchMessages();
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Eroare server:', res.status, errorData);
+        alert('Eroare la trimiterea mesajului. Încearcă din nou.');
       }
     } catch (error) {
       console.error('Eroare la trimiterea mesajului:', error);
+      alert('Eroare de conexiune. Verifică conexiunea la internet.');
+    } finally {
+      setSending(false);
     }
   };
 
@@ -1189,14 +1207,14 @@ export default function AdminChatPage() {
             {/* Send button */}
             <button
               type="submit"
-              disabled={(!newMessage.trim() && !imagePreview && !editingMessage) || uploadingImage}
+              disabled={(!newMessage.trim() && !imagePreview && !editingMessage) || uploadingImage || sending}
               className={`p-1.5 text-white rounded-full transition-colors flex-shrink-0 ${
                 editingMessage 
                   ? 'bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed' 
                   : 'bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed'
               }`}
             >
-              {uploadingImage ? (
+              {(uploadingImage || sending) ? (
                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />

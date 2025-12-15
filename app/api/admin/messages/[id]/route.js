@@ -68,7 +68,7 @@ export async function DELETE(request, { params }) {
 
     const currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { isAdmin: true, id: true, email: true, isSuperAdmin: true }
+      select: { isAdmin: true, id: true, email: true, role: true }
     })
 
     if (!currentUser?.isAdmin) {
@@ -87,7 +87,8 @@ export async function DELETE(request, { params }) {
     }
 
     // Doar autorul sau super admin poate șterge mesajul
-    if (message.senderEmail !== currentUser.email && !currentUser.isSuperAdmin) {
+    const isSuperAdmin = currentUser.role === 'SUPER_ADMIN'
+    if (message.senderEmail !== currentUser.email && !isSuperAdmin) {
       return NextResponse.json({ error: "Nu poți șterge mesajele altora" }, { status: 403 })
     }
 
