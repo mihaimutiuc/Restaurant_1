@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+export const maxDuration = 30
+
+// Configurare pentru body size mare (imagini base64)
+export const fetchCache = 'force-no-store'
 
 // GET - Obține mesajele
 export async function GET(request) {
