@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 
 export default function AdminTestimonialsPage() {
+  const router = useRouter()
   const [testimonials, setTestimonials] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingTestimonial, setEditingTestimonial] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [userRole, setUserRole] = useState(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,6 +20,26 @@ export default function AdminTestimonialsPage() {
     rating: 5,
     avatar: ""
   })
+
+  // Verifică permisiunile
+  useEffect(() => {
+    async function checkAccess() {
+      try {
+        const res = await fetch("/api/admin/check")
+        if (res.ok) {
+          const data = await res.json()
+          setUserRole(data.role)
+          // Moderatorii nu au acces la testimoniale
+          if (data.role === 'MODERATOR') {
+            router.push("/admin/dashboard")
+          }
+        }
+      } catch (error) {
+        console.error("Error checking access:", error)
+      }
+    }
+    checkAccess()
+  }, [router])
 
   const fetchData = async () => {
     try {

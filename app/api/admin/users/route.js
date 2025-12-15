@@ -7,6 +7,9 @@ import bcrypt from "bcryptjs"
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+// Super admin email
+const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -15,23 +18,25 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true }
-    })
-
-    if (!currentUser?.isAdmin) {
+    // Doar super admin poate vedea lista
+    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const users = await prisma.user.findMany({
-      where: { isAdmin: true },
+      where: { 
+        OR: [
+          { isAdmin: true },
+          { role: { in: ['MODERATOR', 'ADMIN', 'SUPER_ADMIN'] } }
+        ]
+      },
       select: {
         id: true,
         name: true,
         email: true,
         image: true,
         isAdmin: true,
+        role: true,
         createdAt: true
       },
       orderBy: { createdAt: "desc" }
@@ -43,9 +48,6 @@ export async function GET() {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-
-// Super admin email
-const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
 
 export async function POST(request) {
   try {
@@ -60,21 +62,16 @@ export async function POST(request) {
       return NextResponse.json({ error: "Doar Super Admin poate adăuga administratori" }, { status: 403 })
     }
 
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true }
-    })
-
-    if (!currentUser?.isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
     const body = await request.json()
-    const { name, email, password, method } = body
+    const { name, email, password, method, role } = body
 
     if (!email) {
       return NextResponse.json({ error: "Email este obligatoriu" }, { status: 400 })
     }
+
+    // Validează rolul
+    const validRoles = ['MODERATOR', 'ADMIN']
+    const selectedRole = validRoles.includes(role) ? role : 'ADMIN'
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -82,16 +79,20 @@ export async function POST(request) {
     })
 
     if (existingUser) {
-      // If user exists, just make them admin
+      // If user exists, just make them admin/moderator
       const updatedUser = await prisma.user.update({
         where: { email },
-        data: { isAdmin: true },
+        data: { 
+          isAdmin: true,
+          role: selectedRole
+        },
         select: {
           id: true,
           name: true,
           email: true,
           image: true,
           isAdmin: true,
+          role: true,
           createdAt: true
         }
       })
@@ -108,7 +109,8 @@ export async function POST(request) {
           name: name || email.split("@")[0],
           email,
           password: hashedPassword,
-          isAdmin: true
+          isAdmin: true,
+          role: selectedRole
         },
         select: {
           id: true,
@@ -116,6 +118,7 @@ export async function POST(request) {
           email: true,
           image: true,
           isAdmin: true,
+          role: true,
           createdAt: true
         }
       })
@@ -126,7 +129,8 @@ export async function POST(request) {
         data: {
           name: name || email.split("@")[0],
           email,
-          isAdmin: true
+          isAdmin: true,
+          role: selectedRole
         },
         select: {
           id: true,
@@ -134,6 +138,7 @@ export async function POST(request) {
           email: true,
           image: true,
           isAdmin: true,
+          role: true,
           createdAt: true
         }
       })

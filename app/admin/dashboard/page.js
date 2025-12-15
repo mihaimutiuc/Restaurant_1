@@ -7,13 +7,15 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
   const [recentOrders, setRecentOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [userRole, setUserRole] = useState(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, ordersRes] = await Promise.all([
+        const [statsRes, ordersRes, checkRes] = await Promise.all([
           fetch("/api/admin/stats"),
-          fetch("/api/admin/orders?limit=5")
+          fetch("/api/admin/orders?limit=5"),
+          fetch("/api/admin/check")
         ])
         
         if (statsRes.ok) {
@@ -25,6 +27,11 @@ export default function AdminDashboard() {
           const ordersData = await ordersRes.json()
           setRecentOrders(ordersData.orders || [])
         }
+
+        if (checkRes.ok) {
+          const checkData = await checkRes.json()
+          setUserRole(checkData.role)
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
       } finally {
@@ -34,6 +41,9 @@ export default function AdminDashboard() {
 
     fetchData()
   }, [])
+
+  // Verifică dacă utilizatorul are acces complet (ADMIN sau SUPER_ADMIN)
+  const isFullAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN'
 
   if (isLoading) {
     return (
@@ -236,20 +246,22 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-        <Link href="/admin/products" className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-orange-200 transition-all group">
-          <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg sm:rounded-xl flex items-center justify-center text-orange-600 sm:mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
+      <div className={`grid grid-cols-1 ${isFullAdmin ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3 sm:gap-6`}>
+        {isFullAdmin && (
+          <Link href="/admin/products" className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-orange-200 transition-all group">
+            <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg sm:rounded-xl flex items-center justify-center text-orange-600 sm:mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base sm:mb-1">Adaugă produs</h3>
+                <p className="text-gray-500 text-xs sm:text-sm">Adaugă un preparat nou</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-sm sm:text-base sm:mb-1">Adaugă produs</h3>
-              <p className="text-gray-500 text-xs sm:text-sm">Adaugă un preparat nou</p>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        )}
 
         <Link href="/admin/orders" className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all group">
           <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
@@ -265,19 +277,35 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        <Link href="/admin/testimonials" className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-green-200 transition-all group">
-          <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center text-green-600 sm:mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+        {isFullAdmin ? (
+          <Link href="/admin/testimonials" className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-green-200 transition-all group">
+            <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center text-green-600 sm:mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base sm:mb-1">Testimoniale</h3>
+                <p className="text-gray-500 text-xs sm:text-sm">Gestionează recenzii</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-sm sm:text-base sm:mb-1">Testimoniale</h3>
-              <p className="text-gray-500 text-xs sm:text-sm">Gestionează recenzii</p>
+          </Link>
+        ) : (
+          <Link href="/admin/chat" className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-green-200 transition-all group">
+            <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg sm:rounded-xl flex items-center justify-center text-green-600 sm:mb-4 group-hover:scale-110 transition-transform flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base sm:mb-1">Chat</h3>
+                <p className="text-gray-500 text-xs sm:text-sm">Comunică cu echipa</p>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        )}
       </div>
     </div>
   )

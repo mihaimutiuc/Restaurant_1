@@ -12,6 +12,7 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname()
   const [isAdmin, setIsAdmin] = useState(false)
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [userRole, setUserRole] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
@@ -56,10 +57,8 @@ export default function AdminLayout({ children }) {
         
         if (data.isAdmin) {
           setIsAdmin(true)
-          // Verifică dacă este super admin
-          if (session.user.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
-            setIsSuperAdmin(true)
-          }
+          setUserRole(data.role)
+          setIsSuperAdmin(data.isSuperAdmin || data.role === 'SUPER_ADMIN')
           // Fetch unread messages
           fetchUnreadCount()
         } else {
@@ -106,11 +105,19 @@ export default function AdminLayout({ children }) {
     return null
   }
 
+  // Verifică dacă utilizatorul are acces admin complet (ADMIN sau SUPER_ADMIN)
+  const isFullAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || isSuperAdmin
+  // Verifică dacă este moderator
+  const isModerator = userRole === 'MODERATOR'
+
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: DashboardIcon },
     { name: "Comenzi", href: "/admin/orders", icon: OrdersIcon },
-    { name: "Produse", href: "/admin/products", icon: ProductsIcon },
-    { name: "Testimoniale", href: "/admin/testimonials", icon: TestimonialsIcon },
+    // Produse și Testimoniale - doar pentru ADMIN și SUPER_ADMIN
+    ...(isFullAdmin ? [
+      { name: "Produse", href: "/admin/products", icon: ProductsIcon },
+      { name: "Testimoniale", href: "/admin/testimonials", icon: TestimonialsIcon },
+    ] : []),
     { name: "Chat", href: "/admin/chat", icon: ChatIcon, badge: unreadMessages },
     // Administratori - vizibil doar pentru super admin
     ...(isSuperAdmin ? [{ name: "Administratori", href: "/admin/users", icon: UsersIcon }] : []),

@@ -6,6 +6,19 @@ import { prisma } from "@/lib/prisma"
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+// Verifică dacă utilizatorul are acces complet (ADMIN sau SUPER_ADMIN)
+async function checkFullAdminAccess(session) {
+  if (!session) return false
+  
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { isAdmin: true, role: true }
+  })
+  
+  // Permite doar ADMIN și SUPER_ADMIN (nu MODERATOR)
+  return user?.isAdmin && ['ADMIN', 'SUPER_ADMIN'].includes(user?.role)
+}
+
 export async function GET(request, { params }) {
   try {
     const session = await getServerSession(authOptions)
@@ -48,13 +61,10 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true }
-    })
-
-    if (!user?.isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Verifică acces complet
+    const hasAccess = await checkFullAdminAccess(session)
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Acces interzis. Doar administratorii pot modifica testimoniale." }, { status: 403 })
     }
 
     const { id } = await params
@@ -88,13 +98,10 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true }
-    })
-
-    if (!user?.isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Verifică acces complet
+    const hasAccess = await checkFullAdminAccess(session)
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Acces interzis. Doar administratorii pot șterge testimoniale." }, { status: 403 })
     }
 
     const { id } = await params

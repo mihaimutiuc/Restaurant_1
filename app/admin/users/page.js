@@ -18,9 +18,11 @@ export default function AdminUsersPage() {
     name: "",
     email: "",
     password: "",
-    method: "google" // "google" or "credentials"
+    method: "google", // "google" or "credentials"
+    role: "ADMIN" // "MODERATOR" or "ADMIN"
   })
   const [error, setError] = useState("")
+  const [editingRole, setEditingRole] = useState(null)
   
   // Verifică dacă utilizatorul curent este super admin
   const isSuperAdminUser = session?.user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
@@ -72,7 +74,7 @@ export default function AdminUsersPage() {
         const newAdmin = await res.json()
         setAdmins([newAdmin, ...admins.filter(a => a.id !== newAdmin.id)])
         setShowModal(false)
-        setFormData({ name: "", email: "", password: "", method: "google" })
+        setFormData({ name: "", email: "", password: "", method: "google", role: "ADMIN" })
       } else {
         const data = await res.json()
         setError(data.error || "Eroare la crearea adminului")
@@ -106,6 +108,61 @@ export default function AdminUsersPage() {
       }
     } catch (error) {
       console.error("Error removing admin:", error)
+    }
+  }
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole })
+      })
+
+      if (res.ok) {
+        const updatedUser = await res.json()
+        setAdmins(admins.map(a => a.id === userId ? updatedUser : a))
+        setEditingRole(null)
+      } else {
+        const data = await res.json()
+        alert(data.error || "Eroare la schimbarea rolului")
+      }
+    } catch (error) {
+      console.error("Error changing role:", error)
+    }
+  }
+
+  const getRoleBadge = (role, email) => {
+    if (email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      return (
+        <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 text-[10px] sm:text-xs font-medium rounded-full flex items-center gap-1">
+          <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          Super Admin
+        </span>
+      )
+    }
+    
+    switch (role) {
+      case 'ADMIN':
+        return (
+          <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 text-[10px] sm:text-xs font-medium rounded-full">
+            Admin
+          </span>
+        )
+      case 'MODERATOR':
+        return (
+          <span className="px-2 sm:px-3 py-1 bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-medium rounded-full">
+            Moderator
+          </span>
+        )
+      default:
+        return (
+          <span className="px-2 sm:px-3 py-1 bg-gray-100 text-gray-700 text-[10px] sm:text-xs font-medium rounded-full">
+            Utilizator
+          </span>
+        )
     }
   }
 
@@ -175,7 +232,7 @@ export default function AdminUsersPage() {
                     <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{admin.name || "N/A"}</p>
                     <p className="text-xs sm:text-sm text-gray-500 truncate">{admin.email}</p>
                     <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">
-                      Admin din {new Date(admin.createdAt).toLocaleDateString('ro-RO', {
+                      Membru din {new Date(admin.createdAt).toLocaleDateString('ro-RO', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
@@ -186,17 +243,29 @@ export default function AdminUsersPage() {
 
                 <div className="flex items-center gap-2 sm:gap-3 ml-auto sm:ml-0">
                   {isSuperAdmin ? (
-                    <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 text-[10px] sm:text-xs font-medium rounded-full flex items-center gap-1">
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Super Admin
-                    </span>
+                    getRoleBadge('SUPER_ADMIN', admin.email)
                   ) : (
                     <>
-                      <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 text-[10px] sm:text-xs font-medium rounded-full">
-                        Admin
-                      </span>
+                      {editingRole === admin.id ? (
+                        <select
+                          value={admin.role || 'ADMIN'}
+                          onChange={(e) => handleRoleChange(admin.id, e.target.value)}
+                          onBlur={() => setEditingRole(null)}
+                          className="px-2 py-1 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-500"
+                          autoFocus
+                        >
+                          <option value="MODERATOR">Moderator</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
+                      ) : (
+                        <button
+                          onClick={() => setEditingRole(admin.id)}
+                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          title="Click pentru a schimba rolul"
+                        >
+                          {getRoleBadge(admin.role, admin.email)}
+                        </button>
+                      )}
                       {isSuperAdminUser && (
                         <button
                           onClick={() => handleRemoveAdmin(admin.id, admin.name || admin.email, admin.email)}
@@ -235,11 +304,12 @@ export default function AdminUsersPage() {
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Cum funcționează</h3>
+            <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Roluri disponibile</h3>
             <ul className="text-xs sm:text-sm text-blue-700 space-y-1">
-              <li>• <strong>Google:</strong> Login cu butonul Google</li>
-              <li>• <strong>Email & Parolă:</strong> Login cu credențiale</li>
-              <li className="hidden sm:block">• Eliminarea admin-ului nu șterge contul</li>
+              <li>• <strong>Moderator:</strong> Acces la Comenzi, Chat și Dashboard (fără creare produse/testimoniale)</li>
+              <li>• <strong>Admin:</strong> Acces complet la toate funcțiile (excepție: gestionare utilizatori)</li>
+              <li>• <strong>Super Admin:</strong> Acces complet + gestionare utilizatori și roluri</li>
+              <li className="hidden sm:block">• Click pe rol pentru a-l schimba</li>
             </ul>
           </div>
         </div>
@@ -354,12 +424,54 @@ export default function AdminUsersPage() {
                 </div>
               )}
 
+              {/* Role Selection */}
+              <div>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Rol *</label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: "MODERATOR" })}
+                    className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
+                      formData.role === "MODERATOR"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <span className="font-medium text-gray-900 text-xs sm:text-sm">Moderator</span>
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-gray-500">Comenzi, Chat, Dashboard</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: "ADMIN" })}
+                    className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
+                      formData.role === "ADMIN"
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="font-medium text-gray-900 text-xs sm:text-sm">Admin</span>
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-gray-500">Acces complet</p>
+                  </button>
+                </div>
+              </div>
+
               <div className="flex gap-2 sm:gap-3 pt-2 sm:pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false)
-                    setFormData({ name: "", email: "", password: "", method: "google" })
+                    setFormData({ name: "", email: "", password: "", method: "google", role: "ADMIN" })
                     setError("")
                   }}
                   className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors text-sm"

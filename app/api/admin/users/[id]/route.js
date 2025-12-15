@@ -9,6 +9,70 @@ export const runtime = 'nodejs'
 // Super admin email that cannot be deleted
 const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
 
+// PATCH - Update user role
+export async function PATCH(request, { params }) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Doar super admin poate schimba roluri
+    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+      return NextResponse.json({ error: "Doar Super Admin poate schimba rolurile" }, { status: 403 })
+    }
+
+    const { id } = await params
+    const body = await request.json()
+    const { role } = body
+
+    // Validează rolul
+    const validRoles = ['USER', 'MODERATOR', 'ADMIN']
+    if (!validRoles.includes(role)) {
+      return NextResponse.json({ error: "Rol invalid" }, { status: 400 })
+    }
+
+    // Get the user to be updated
+    const userToUpdate = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true, name: true }
+    })
+
+    if (!userToUpdate) {
+      return NextResponse.json({ error: "Utilizatorul nu a fost găsit" }, { status: 404 })
+    }
+
+    // Nu permite schimbarea rolului super admin-ului
+    if (userToUpdate.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+      return NextResponse.json({ error: "Nu poți schimba rolul Super Admin-ului" }, { status: 403 })
+    }
+
+    // Actualizează rolul
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { 
+        role: role,
+        isAdmin: ['MODERATOR', 'ADMIN'].includes(role)
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        isAdmin: true,
+        role: true,
+        createdAt: true
+      }
+    })
+
+    return NextResponse.json(updatedUser)
+  } catch (error) {
+    console.error("Error updating user role:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions)
@@ -22,21 +86,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Doar Super Admin poate elimina administratori" }, { status: 403 })
     }
 
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true, id: true }
-    })
-
-    if (!currentUser?.isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
-
     const { id } = await params
-
-    // Prevent deleting yourself
-    if (id === currentUser.id) {
-      return NextResponse.json({ error: "Nu poți să te ștergi pe tine" }, { status: 400 })
-    }
 
     // Get the user to be deleted
     const userToDelete = await prisma.user.findUnique({
@@ -54,10 +104,13 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: "Nu poți elimina drepturile de admin pentru Super Admin" }, { status: 403 })
     }
 
-    // Remove admin status (don't delete the user, just remove admin rights)
-    const updatedUser = await prisma.user.update({
+    // Remove admin status and reset role to USER
+    await prisma.user.update({
       where: { id },
-      data: { isAdmin: false }
+      data: { 
+        isAdmin: false,
+        role: 'USER'
+      }
     })
 
     return NextResponse.json({ success: true })

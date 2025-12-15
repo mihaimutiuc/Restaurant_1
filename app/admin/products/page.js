@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 
 export default function AdminProductsPage() {
+  const router = useRouter()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -12,6 +14,7 @@ export default function AdminProductsPage() {
   const [filterCategory, setFilterCategory] = useState("ALL")
   const [search, setSearch] = useState("")
   const [uploading, setUploading] = useState(false)
+  const [userRole, setUserRole] = useState(null)
   const fileInputRef = useRef(null)
 
   const [formData, setFormData] = useState({
@@ -23,6 +26,26 @@ export default function AdminProductsPage() {
     available: true,
     categoryId: ""
   })
+
+  // Verifică permisiunile
+  useEffect(() => {
+    async function checkAccess() {
+      try {
+        const res = await fetch("/api/admin/check")
+        if (res.ok) {
+          const data = await res.json()
+          setUserRole(data.role)
+          // Moderatorii nu au acces la produse
+          if (data.role === 'MODERATOR') {
+            router.push("/admin/dashboard")
+          }
+        }
+      } catch (error) {
+        console.error("Error checking access:", error)
+      }
+    }
+    checkAccess()
+  }, [router])
 
   const fetchData = async () => {
     try {

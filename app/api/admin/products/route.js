@@ -6,6 +6,19 @@ import { prisma } from "@/lib/prisma"
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+// Verifică dacă utilizatorul are acces complet (ADMIN sau SUPER_ADMIN)
+async function checkFullAdminAccess(session) {
+  if (!session) return false
+  
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { isAdmin: true, role: true }
+  })
+  
+  // Permite doar ADMIN și SUPER_ADMIN (nu MODERATOR)
+  return user?.isAdmin && ['ADMIN', 'SUPER_ADMIN'].includes(user?.role)
+}
+
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions)
@@ -16,13 +29,14 @@ export async function GET(request) {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: { isAdmin: true }
+      select: { isAdmin: true, role: true }
     })
 
     if (!user?.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    // Pentru GET, permitem și moderatorilor să vadă produsele (readonly)
     const products = await prisma.product.findMany({
       include: {
         category: true
@@ -56,13 +70,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { isAdmin: true }
-    })
-
-    if (!user?.isAdmin) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Verifică acces complet (doar ADMIN și SUPER_ADMIN pot crea produse)
+    const hasAccess = await checkFullAdminAccess(session)
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Acces interzis. Doar administratorii pot crea produse." }, { status: 403 })
     }
 
     const body = await request.json()
@@ -105,6 +116,6 @@ export async function POST(request) {
     })
   } catch (error) {
     console.error("Error creating product:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error: " + error.message }, { status: 500 })
   }
 }
