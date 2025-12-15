@@ -231,9 +231,9 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
+      <div className={`lg:pl-64 ${pathname === '/admin/chat' ? 'h-screen flex flex-col overflow-hidden' : ''}`}>
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center justify-between px-4 py-4 lg:px-8">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -260,7 +260,7 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-8">
+        <main className={pathname === '/admin/chat' ? 'flex-1 overflow-hidden' : 'p-4 lg:p-8'}>
           {children}
         </main>
       </div>

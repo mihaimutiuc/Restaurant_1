@@ -594,7 +594,7 @@ export default function AdminChatPage() {
     : null;
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] sm:h-[calc(100dvh-100px)] bg-gray-100 rounded-lg overflow-hidden relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+    <div className="flex h-full bg-gray-100 overflow-hidden" style={{ height: 'calc(100dvh - 73px)' }}>
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
