@@ -218,20 +218,22 @@ export default function AdminChatPage() {
     }
   };
 
-  // Editează mesaj
+  // Editează mesaj - folosește newMessage din input-ul principal
   const handleEditMessage = async (messageId) => {
-    if (!editContent.trim()) return;
+    const contentToSave = newMessage.trim() || editContent.trim();
+    if (!contentToSave) return;
     
     try {
       const res = await fetch(`/api/admin/messages/${messageId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: editContent }),
+        body: JSON.stringify({ content: contentToSave }),
       });
       
       if (res.ok) {
         setEditingMessage(null);
         setEditContent('');
+        setNewMessage('');
         fetchMessages();
       } else {
         const error = await res.json();
@@ -344,28 +346,71 @@ export default function AdminChatPage() {
   };
 
   const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
       // Validare tip
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
       if (!validTypes.includes(file.type)) {
         alert('Tip de fișier invalid. Doar imagini (JPG, PNG, WebP, GIF, AVIF).');
+        e.target.value = '';
         return;
       }
       // Validare dimensiune
       if (file.size > 2 * 1024 * 1024) {
         alert('Imaginea este prea mare. Dimensiunea maximă este 2MB.');
+        e.target.value = '';
         return;
       }
       // Preview
       const reader = new FileReader();
-      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.onload = (event) => {
+        setImagePreview(event.target?.result);
+      };
+      reader.onerror = () => {
+        console.error('Eroare la citirea fișierului');
+        e.target.value = '';
+      };
       reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Eroare la selectarea fișierului:', error);
+      e.target.value = '';
     }
+  };
+
+  // Funcție pentru ștergerea imaginii din preview
+  const clearImagePreview = () => {
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  // Funcție pentru a începe editarea în input-ul principal
+  const startEditing = (message) => {
+    setEditingMessage(message.id);
+    setEditContent(message.content || '');
+    setNewMessage(message.content || '');
+  };
+
+  // Funcție pentru a anula editarea
+  const cancelEditing = () => {
+    setEditingMessage(null);
+    setEditContent('');
+    setNewMessage('');
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    
+    // Dacă suntem în mod editare, salvăm editarea
+    if (editingMessage) {
+      if (!newMessage.trim()) return;
+      await handleEditMessage(editingMessage);
+      setNewMessage('');
+      return;
+    }
+    
     if ((!newMessage.trim() && !imagePreview) || !session?.user) return;
 
     // Folosește imagePreview direct (este deja base64)
@@ -797,23 +842,18 @@ export default function AdminChatPage() {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col w-full min-w-0 relative">
-        {/* Mobile menu button - buton flotant în colțul din dreapta-jos pentru a evita bara de navigare */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed right-4 bottom-24 z-30 p-3.5 bg-amber-500 text-white rounded-full shadow-xl hover:bg-amber-600 active:bg-amber-700 touch-manipulation border-2 border-amber-400"
-          style={{ 
-            minWidth: '52px', 
-            minHeight: '52px',
-            marginBottom: 'env(safe-area-inset-bottom, 0px)'
-          }}
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </button>
-
         {/* Header */}
         <div className="p-2 sm:p-3 bg-white border-b border-gray-200 flex items-center gap-2">
+          {/* Mobile menu button - în header pentru acces ușor */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden p-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 active:bg-amber-700 touch-manipulation flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          
           {selectedChat === 'general' ? (
             <>
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm flex-shrink-0">
@@ -969,8 +1009,7 @@ export default function AdminChatPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setEditingMessage(message.id);
-                                  setEditContent(message.content);
+                                  startEditing(message);
                                   setMessageMenu(null);
                                 }}
                                 className="w-full px-2.5 py-1 text-left text-xs text-gray-700 hover:bg-gray-100 flex items-center gap-1.5"
@@ -1003,7 +1042,7 @@ export default function AdminChatPage() {
                           isOwnMessage
                             ? 'bg-amber-500 text-white rounded-br-sm'
                             : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
-                        }`}
+                        } ${isEditing ? 'ring-2 ring-amber-300' : ''}`}
                       >
                         {message.imageUrl && (
                           <img 
@@ -1014,47 +1053,12 @@ export default function AdminChatPage() {
                           />
                         )}
                         
-                        {/* Mod editare */}
-                        {isEditing ? (
-                          <div className="flex flex-col gap-1.5">
-                            <input
-                              type="text"
-                              value={editContent}
-                              onChange={(e) => setEditContent(e.target.value)}
-                              className="px-2 py-1 rounded text-gray-900 text-xs sm:text-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                              autoFocus
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleEditMessage(message.id);
-                                if (e.key === 'Escape') {
-                                  setEditingMessage(null);
-                                  setEditContent('');
-                                }
-                              }}
-                            />
-                            <div className="flex gap-1 justify-end">
-                              <button
-                                onClick={() => {
-                                  setEditingMessage(null);
-                                  setEditContent('');
-                                }}
-                                className="px-1.5 py-0.5 text-[10px] sm:text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-                              >
-                                Anulează
-                              </button>
-                              <button
-                                onClick={() => handleEditMessage(message.id)}
-                                className="px-1.5 py-0.5 text-[10px] sm:text-xs bg-white text-amber-600 rounded hover:bg-amber-50"
-                              >
-                                Salvează
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {message.content && message.content !== '📷 Imagine' && (
-                              <p className="break-words text-xs sm:text-sm">{message.content}</p>
-                            )}
-                          </>
+                        {/* Conținutul mesajului - cu indicator dacă e în editare */}
+                        {message.content && message.content !== '📷 Imagine' && (
+                          <p className="break-words text-xs sm:text-sm">{message.content}</p>
+                        )}
+                        {isEditing && (
+                          <p className="text-[10px] mt-1 opacity-70">✏️ Editezi în input-ul de jos</p>
                         )}
                       </div>
                       <p className={`text-[9px] sm:text-[10px] text-gray-400 mt-0.5 ${isOwnMessage ? 'text-right mr-0.5' : 'ml-0.5'}`}>
@@ -1087,14 +1091,13 @@ export default function AdminChatPage() {
             <div className="relative inline-block">
               <img src={imagePreview} alt="Preview" className="h-12 sm:h-16 rounded-lg" />
               <button 
-                onClick={() => {
-                  setImagePreview(null);
-                  if (fileInputRef.current) fileInputRef.current.value = '';
-                  if (cameraInputRef.current) cameraInputRef.current.value = '';
-                }}
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 text-xs"
+                type="button"
+                onClick={clearImagePreview}
+                className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-md"
               >
-                ×
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -1156,25 +1159,51 @@ export default function AdminChatPage() {
               </svg>
             </button>
 
+            {/* Buton anulare editare */}
+            {editingMessage && (
+              <button
+                type="button"
+                onClick={cancelEditing}
+                className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
+                title="Anulează editarea"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+
             {/* Message input */}
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Scrie..."
-              className="flex-1 px-2.5 sm:px-3 py-1.5 border border-gray-300 rounded-full focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-xs sm:text-sm min-w-0 text-gray-900 placeholder:text-gray-400"
+              placeholder={editingMessage ? "Editează mesajul..." : "Scrie..."}
+              className={`flex-1 px-2.5 sm:px-3 py-1.5 border rounded-full focus:outline-none focus:ring-1 text-xs sm:text-sm min-w-0 text-gray-900 placeholder:text-gray-400 ${
+                editingMessage 
+                  ? 'border-amber-400 bg-amber-50 focus:border-amber-500 focus:ring-amber-500' 
+                  : 'border-gray-300 focus:border-amber-500 focus:ring-amber-500'
+              }`}
             />
 
             {/* Send button */}
             <button
               type="submit"
-              disabled={(!newMessage.trim() && !imagePreview) || uploadingImage}
-              className="p-1.5 bg-amber-500 text-white rounded-full hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              disabled={(!newMessage.trim() && !imagePreview && !editingMessage) || uploadingImage}
+              className={`p-1.5 text-white rounded-full transition-colors flex-shrink-0 ${
+                editingMessage 
+                  ? 'bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed' 
+                  : 'bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed'
+              }`}
             >
               {uploadingImage ? (
                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              ) : editingMessage ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
