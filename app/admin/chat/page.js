@@ -35,9 +35,11 @@ export default function AdminChatPage() {
   const [editingGroup, setEditingGroup] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const groupImageRef = useRef(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Funcție pentru a genera o culoare consistentă bazată pe email
   const getAvatarColor = (email) => {
@@ -87,9 +89,14 @@ export default function AdminChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Detectează dacă utilizatorul nu este la capătul conversației
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isNearBottom);
+    }
+  };
 
   // Check if super admin
   const checkSuperAdmin = async () => {
@@ -787,24 +794,23 @@ export default function AdminChatPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col w-full min-w-0">
+      <div className="flex-1 flex flex-col w-full min-w-0 relative">
+        {/* Mobile menu button - buton flotant în dreapta sus */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden fixed right-3 top-20 z-30 p-3 bg-amber-500 text-white rounded-full shadow-lg hover:bg-amber-600 active:bg-amber-700 touch-manipulation"
+          style={{ 
+            minWidth: '48px', 
+            minHeight: '48px'
+          }}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         {/* Header */}
         <div className="p-2 sm:p-3 bg-white border-b border-gray-200 flex items-center gap-2">
-          {/* Mobile menu button - cu safe area inset pentru a nu fi acoperit de bara browserului */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0 touch-manipulation"
-            style={{ 
-              minWidth: '44px', 
-              minHeight: '44px',
-              marginTop: 'env(safe-area-inset-top, 0px)'
-            }}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-
           {selectedChat === 'general' ? (
             <>
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-sm flex-shrink-0">
@@ -873,7 +879,23 @@ export default function AdminChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gray-50" onClick={() => setMessageMenu(null)}>
+        <div 
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gray-50 relative" 
+          onClick={() => setMessageMenu(null)}
+        >
+          {/* Scroll to bottom button */}
+          {showScrollButton && (
+            <button
+              onClick={scrollToBottom}
+              className="fixed bottom-24 right-4 z-20 p-3 bg-amber-500 text-white rounded-full shadow-lg hover:bg-amber-600 active:bg-amber-700 transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+          )}
           {Object.entries(groupedMessages).map(([date, dayMessages]) => (
             <div key={date}>
               <div className="flex justify-center mb-2 sm:mb-3">

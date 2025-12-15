@@ -108,7 +108,7 @@ export async function POST(request) {
       select: { id: true, name: true, email: true, image: true }
     })
 
-    return NextResponse.json({ ...group, members })
+    return NextResponse.json({ group: { ...group, members } })
   } catch (error) {
     console.error("Error creating group:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
