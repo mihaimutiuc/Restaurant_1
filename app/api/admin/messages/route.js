@@ -4,11 +4,6 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-export const maxDuration = 30
-
-// Configurare pentru body size mare (imagini base64)
-export const fetchCache = 'force-no-store'
 
 // GET - Obține mesajele
 export async function GET(request) {
@@ -77,13 +72,18 @@ export async function POST(request) {
     const session = await getServerSession(authOptions)
     
     if (!session) {
+      console.log("POST /api/admin/messages - No session")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    console.log("POST /api/admin/messages - Session email:", session.user?.email)
 
     const currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { isAdmin: true, id: true, name: true, image: true, email: true }
     })
+
+    console.log("POST /api/admin/messages - User found:", currentUser?.id, "isAdmin:", currentUser?.isAdmin)
 
     if (!currentUser?.isAdmin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
@@ -91,6 +91,8 @@ export async function POST(request) {
 
     const body = await request.json()
     const { content, receiverId, groupId, imageUrl } = body
+
+    console.log("POST /api/admin/messages - Content:", content?.substring(0, 50), "hasImage:", !!imageUrl, "receiverId:", receiverId, "groupId:", groupId)
 
     if ((!content || content.trim() === "") && !imageUrl) {
       return NextResponse.json({ error: "Mesajul nu poate fi gol" }, { status: 400 })
@@ -113,16 +115,17 @@ export async function POST(request) {
         senderId: currentUser.id,
         senderName: currentUser.name || currentUser.email,
         senderEmail: currentUser.email,
-        senderImage: currentUser.image, // Folosește imaginea din DB
+        senderImage: currentUser.image,
         receiverId: receiverId || null,
         groupId: groupId || null,
         imageUrl: imageUrl || null
       }
     })
 
+    console.log("POST /api/admin/messages - Message created:", message.id)
     return NextResponse.json(message)
   } catch (error) {
     console.error("Error creating message:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error", details: error.message }, { status: 500 })
   }
 }

@@ -460,11 +460,11 @@ export default function AdminChatPage() {
       } else {
         const errorData = await res.json().catch(() => ({}));
         console.error('Eroare server:', res.status, errorData);
-        alert('Eroare la trimiterea mesajului. Încearcă din nou.');
+        alert(`Eroare ${res.status}: ${errorData.error || errorData.details || 'Încearcă din nou.'}`);
       }
     } catch (error) {
       console.error('Eroare la trimiterea mesajului:', error);
-      alert('Eroare de conexiune. Verifică conexiunea la internet.');
+      alert(`Eroare de conexiune: ${error.message}`);
     } finally {
       setSending(false);
     }
