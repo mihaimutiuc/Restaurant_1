@@ -161,14 +161,13 @@ export default function AdminChatPage() {
     }
   };
 
-  // Fetch toți adminii
+  // Fetch toți adminii pentru chat
   const fetchAllAdmins = async () => {
     try {
-      const res = await fetch('/api/admin/users');
+      const res = await fetch('/api/admin/chat-users');
       if (res.ok) {
         const data = await res.json();
-        const admins = data.users?.filter(u => u.isAdmin) || [];
-        setAllAdmins(admins);
+        setAllAdmins(data.users || []);
       }
     } catch (error) {
       console.error('Eroare la încărcarea adminilor:', error);
@@ -595,7 +594,7 @@ export default function AdminChatPage() {
     : null;
 
   return (
-    <div className="flex h-[calc(100vh-80px)] sm:h-[calc(100vh-120px)] bg-gray-100 rounded-lg overflow-hidden relative">
+    <div className="flex h-[calc(100dvh-64px)] sm:h-[calc(100dvh-100px)] bg-gray-100 rounded-lg overflow-hidden relative" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
@@ -786,8 +785,11 @@ export default function AdminChatPage() {
           })}
           
           {otherAdmins.length === 0 && (
-            <div className="p-3 text-center text-gray-500 text-xs sm:text-sm">
-              <p>Nu există alți administratori</p>
+            <div className="p-3 text-center text-gray-400 text-xs">
+              <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p>Se încarcă...</p>
             </div>
           )}
         </div>
@@ -795,17 +797,18 @@ export default function AdminChatPage() {
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col w-full min-w-0 relative">
-        {/* Mobile menu button - buton flotant în dreapta sus */}
+        {/* Mobile menu button - buton flotant în colțul din dreapta-jos pentru a evita bara de navigare */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed right-3 top-20 z-30 p-3 bg-amber-500 text-white rounded-full shadow-lg hover:bg-amber-600 active:bg-amber-700 touch-manipulation"
+          className="md:hidden fixed right-4 bottom-24 z-30 p-3.5 bg-amber-500 text-white rounded-full shadow-xl hover:bg-amber-600 active:bg-amber-700 touch-manipulation border-2 border-amber-400"
           style={{ 
-            minWidth: '48px', 
-            minHeight: '48px'
+            minWidth: '52px', 
+            minHeight: '52px',
+            marginBottom: 'env(safe-area-inset-bottom, 0px)'
           }}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         </button>
 
@@ -885,11 +888,12 @@ export default function AdminChatPage() {
           className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3 bg-gray-50 relative" 
           onClick={() => setMessageMenu(null)}
         >
-          {/* Scroll to bottom button */}
+          {/* Scroll to bottom button - poziționat mai sus pe mobil pentru a nu se suprapune cu butonul de chat */}
           {showScrollButton && (
             <button
               onClick={scrollToBottom}
-              className="fixed bottom-24 right-4 z-20 p-3 bg-amber-500 text-white rounded-full shadow-lg hover:bg-amber-600 active:bg-amber-700 transition-all"
+              className="fixed bottom-36 sm:bottom-24 right-4 z-20 p-2.5 sm:p-3 bg-white text-amber-600 rounded-full shadow-lg hover:bg-gray-50 active:bg-gray-100 transition-all border border-gray-200"
+              style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
