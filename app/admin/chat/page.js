@@ -319,9 +319,9 @@ export default function AdminChatPage() {
     setUploadingImage(true);
     
     try {
-      // Validare dimensiune (max 2MB pentru base64)
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Imaginea este prea mare. Dimensiunea maximă este 2MB.');
+      // Validare dimensiune (max 5MB pentru base64)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Imaginea este prea mare. Dimensiunea maximă este 5MB.');
         setUploadingImage(false);
         return null;
       }
@@ -359,8 +359,8 @@ export default function AdminChatPage() {
         return;
       }
       // Validare dimensiune
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Imaginea este prea mare. Dimensiunea maximă este 2MB.');
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Imaginea este prea mare. Dimensiunea maximă este 5MB.');
         e.target.value = '';
         return;
       }
@@ -624,8 +624,8 @@ export default function AdminChatPage() {
   const handleGroupImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Imaginea este prea mare. Dimensiunea maximă este 2MB.');
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Imaginea este prea mare. Dimensiunea maximă este 5MB.');
         return;
       }
       const reader = new FileReader();
