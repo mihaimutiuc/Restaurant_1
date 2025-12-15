@@ -12,7 +12,7 @@ export default function AdminChatPage() {
   const [loading, setLoading] = useState(true);
   const [onlineAdmins, setOnlineAdmins] = useState([]);
   const [allAdmins, setAllAdmins] = useState([]);
-  const [selectedChat, setSelectedChat] = useState('general'); // 'general' sau ID-ul adminului
+  const [selectedChat, setSelectedChat] = useState('general'); // 'general', ID-ul adminului, sau 'group_ID'
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Pentru mobile
@@ -21,9 +21,23 @@ export default function AdminChatPage() {
   const [editingMessage, setEditingMessage] = useState(null); // Mesajul în curs de editare
   const [editContent, setEditContent] = useState(''); // Conținutul editat
   const [messageMenu, setMessageMenu] = useState(null); // ID-ul mesajului cu meniu deschis
+  
+  // Grupuri
+  const [groups, setGroups] = useState([]);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [groupImage, setGroupImage] = useState(null);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [editingGroup, setEditingGroup] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const groupImageRef = useRef(null);
 
   // Funcție pentru a genera o culoare consistentă bazată pe email
   const getAvatarColor = (email) => {
@@ -77,13 +91,43 @@ export default function AdminChatPage() {
     scrollToBottom();
   }, [messages]);
 
+  // Check if super admin
+  const checkSuperAdmin = async () => {
+    try {
+      const res = await fetch('/api/admin/check');
+      if (res.ok) {
+        const data = await res.json();
+        setIsSuperAdmin(data.isSuperAdmin || false);
+      }
+    } catch (error) {
+      console.error('Eroare la verificarea rolului:', error);
+    }
+  };
+
+  // Fetch grupuri
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch('/api/admin/groups');
+      if (res.ok) {
+        const data = await res.json();
+        setGroups(data.groups || []);
+      }
+    } catch (error) {
+      console.error('Eroare la încărcarea grupurilor:', error);
+    }
+  };
+
   // Fetch mesaje
   const fetchMessages = async () => {
     try {
-      const receiverId = selectedChat === 'general' ? '' : selectedChat;
-      const url = receiverId 
-        ? `/api/admin/messages?receiverId=${receiverId}&limit=50`
-        : `/api/admin/messages?limit=50`;
+      let url = '/api/admin/messages?limit=50';
+      
+      if (selectedChat.startsWith('group_')) {
+        const groupId = selectedChat.replace('group_', '');
+        url = `/api/admin/messages?groupId=${groupId}&limit=50`;
+      } else if (selectedChat !== 'general') {
+        url = `/api/admin/messages?receiverId=${selectedChat}&limit=50`;
+      }
       
       const res = await fetch(url);
       if (res.ok) {
@@ -224,6 +268,8 @@ export default function AdminChatPage() {
       fetchAllAdmins();
       updateOnlineStatus();
       fetchUnreadMessages();
+      checkSuperAdmin();
+      fetchGroups();
 
       // Polling pentru mesaje și status
       const messageInterval = setInterval(() => {
@@ -234,11 +280,13 @@ export default function AdminChatPage() {
         fetchOnlineStatus();
         updateOnlineStatus();
       }, 15000); // Update status la fiecare 15 secunde
+      const groupInterval = setInterval(fetchGroups, 10000);
 
       // Cleanup la unmount
       return () => {
         clearInterval(messageInterval);
         clearInterval(statusInterval);
+        clearInterval(groupInterval);
         // Marchează offline
         fetch('/api/admin/status', { method: 'DELETE' }).catch(() => {});
       };
@@ -327,8 +375,11 @@ export default function AdminChatPage() {
         imageUrl: imageUrl,
       };
 
-      // Dacă e mesaj privat
-      if (selectedChat !== 'general') {
+      // Dacă e mesaj într-un grup
+      if (selectedChat.startsWith('group_')) {
+        messageData.groupId = selectedChat.replace('group_', '');
+      } else if (selectedChat !== 'general') {
+        // Dacă e mesaj privat
         messageData.receiverId = selectedChat;
       }
 
@@ -389,8 +440,129 @@ export default function AdminChatPage() {
 
   const getSelectedChatName = () => {
     if (selectedChat === 'general') return 'Chat General';
+    if (selectedChat.startsWith('group_')) {
+      const groupId = selectedChat.replace('group_', '');
+      const group = groups.find(g => g.id === groupId);
+      return group?.name || 'Grup';
+    }
     const admin = allAdmins.find(a => a.id === selectedChat);
     return admin?.name || admin?.email || 'Conversație Privată';
+  };
+
+  // Funcții pentru grupuri
+  const handleCreateGroup = async () => {
+    if (!groupName.trim()) {
+      alert('Te rog introdu un nume pentru grup');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/admin/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: groupName.trim(),
+          description: groupDescription.trim(),
+          image: groupImage,
+          memberIds: selectedMembers
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setShowGroupModal(false);
+        resetGroupForm();
+        fetchGroups();
+        setSelectedChat(`group_${data.group.id}`);
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Eroare la crearea grupului');
+      }
+    } catch (error) {
+      console.error('Eroare la crearea grupului:', error);
+      alert('Eroare la crearea grupului');
+    }
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!selectedGroup) return;
+    
+    try {
+      const res = await fetch(`/api/admin/groups/${selectedGroup.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: groupName.trim() || undefined,
+          description: groupDescription.trim(),
+          image: groupImage !== null ? groupImage : undefined,
+          memberIds: selectedMembers.length > 0 ? selectedMembers : undefined
+        })
+      });
+      
+      if (res.ok) {
+        setShowGroupSettings(false);
+        resetGroupForm();
+        fetchGroups();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Eroare la actualizarea grupului');
+      }
+    } catch (error) {
+      console.error('Eroare la actualizarea grupului:', error);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    if (!confirm('Sigur vrei să ștergi acest grup? Toate mesajele vor fi șterse.')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/groups/${groupId}`, {
+        method: 'DELETE'
+      });
+      
+      if (res.ok) {
+        setShowGroupSettings(false);
+        setSelectedChat('general');
+        fetchGroups();
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Eroare la ștergerea grupului');
+      }
+    } catch (error) {
+      console.error('Eroare la ștergerea grupului:', error);
+    }
+  };
+
+  const resetGroupForm = () => {
+    setGroupName('');
+    setGroupDescription('');
+    setGroupImage(null);
+    setSelectedMembers([]);
+    setEditingGroup(false);
+    setSelectedGroup(null);
+  };
+
+  const openGroupSettings = (group) => {
+    setSelectedGroup(group);
+    setGroupName(group.name);
+    setGroupDescription(group.description || '');
+    setGroupImage(group.image);
+    setSelectedMembers(group.memberIds || []);
+    setEditingGroup(true);
+    setShowGroupSettings(true);
+  };
+
+  const handleGroupImageSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Imaginea este prea mare. Dimensiunea maximă este 2MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => setGroupImage(e.target.result);
+      reader.readAsDataURL(file);
+    }
   };
 
   if (status === 'loading' || loading) {
@@ -410,6 +582,11 @@ export default function AdminChatPage() {
     setSidebarOpen(false);
   };
 
+  // Găsește grupul curent dacă e selectat
+  const currentGroup = selectedChat.startsWith('group_') 
+    ? groups.find(g => g.id === selectedChat.replace('group_', ''))
+    : null;
+
   return (
     <div className="flex h-[calc(100vh-80px)] sm:h-[calc(100vh-120px)] bg-gray-100 rounded-lg overflow-hidden relative">
       {/* Mobile sidebar backdrop */}
@@ -427,6 +604,7 @@ export default function AdminChatPage() {
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         md:w-64 lg:w-72
+        pb-[env(safe-area-inset-bottom,0px)]
       `}>
         <div className="p-2.5 sm:p-4 border-b border-gray-200 flex items-center justify-between">
           <h2 className="text-sm sm:text-lg font-semibold text-gray-800">Conversații</h2>
@@ -465,6 +643,82 @@ export default function AdminChatPage() {
                 : `${onlineAdmins.filter(a => a.isOnline).length} online`}
             </p>
           </div>
+        </div>
+
+        {/* Secțiunea Grupuri */}
+        <div className="px-2.5 sm:px-4 py-1.5 bg-gray-50 flex items-center justify-between">
+          <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Grupuri</p>
+          {isSuperAdmin && (
+            <button
+              onClick={() => {
+                resetGroupForm();
+                setShowGroupModal(true);
+              }}
+              className="p-1 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded"
+              title="Creează grup nou"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Lista de grupuri */}
+        <div className="overflow-y-auto max-h-36 sm:max-h-48">
+          {groups.map(group => (
+            <div 
+              key={group.id}
+              onClick={() => handleSelectChat(`group_${group.id}`)}
+              className={`p-2.5 sm:p-3 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-2 ${
+                selectedChat === `group_${group.id}` ? 'bg-amber-50 border-l-4 border-amber-500' : ''
+              }`}
+            >
+              <div className="relative flex-shrink-0">
+                {group.image ? (
+                  <img 
+                    src={group.image} 
+                    alt={group.name}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md`}>
+                    {group.name?.substring(0, 2).toUpperCase() || 'GR'}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-800 truncate text-xs sm:text-sm">{group.name}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 truncate">
+                  {group.memberIds?.length || 0} membri
+                </p>
+              </div>
+              {isSuperAdmin && selectedChat === `group_${group.id}` && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openGroupSettings(group);
+                  }}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+          
+          {groups.length === 0 && (
+            <div className="p-3 text-center text-gray-500 text-xs">
+              {isSuperAdmin ? (
+                <p>Creează primul grup</p>
+              ) : (
+                <p>Niciun grup disponibil</p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="px-2.5 sm:px-4 py-1.5 bg-gray-50">
@@ -536,12 +790,17 @@ export default function AdminChatPage() {
       <div className="flex-1 flex flex-col w-full min-w-0">
         {/* Header */}
         <div className="p-2 sm:p-3 bg-white border-b border-gray-200 flex items-center gap-2">
-          {/* Mobile menu button */}
+          {/* Mobile menu button - cu safe area inset pentru a nu fi acoperit de bara browserului */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg flex-shrink-0"
+            className="md:hidden p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg flex-shrink-0 touch-manipulation"
+            style={{ 
+              minWidth: '44px', 
+              minHeight: '44px',
+              marginTop: 'env(safe-area-inset-top, 0px)'
+            }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
@@ -555,6 +814,31 @@ export default function AdminChatPage() {
                 <h3 className="font-semibold text-gray-800 text-xs sm:text-sm truncate">Chat General</h3>
                 <p className="text-[10px] sm:text-xs text-gray-500">{onlineAdmins.filter(a => a.isOnline).length} online</p>
               </div>
+            </>
+          ) : selectedChat.startsWith('group_') && currentGroup ? (
+            <>
+              {currentGroup.image ? (
+                <img src={currentGroup.image} alt="" className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold shadow-md text-xs sm:text-sm flex-shrink-0">
+                  {currentGroup.name?.substring(0, 2).toUpperCase() || 'GR'}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{currentGroup.name}</h3>
+                <p className="text-[10px] sm:text-xs text-gray-500">{currentGroup.memberIds?.length || 0} membri</p>
+              </div>
+              {isSuperAdmin && (
+                <button
+                  onClick={() => openGroupSettings(currentGroup)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -896,6 +1180,290 @@ export default function AdminChatPage() {
             className="max-w-full max-h-full object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
           />
+        </div>
+      )}
+
+      {/* Modal pentru crearea unui grup nou */}
+      {showGroupModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
+          onClick={() => setShowGroupModal(false)}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">Creează Grup Nou</h3>
+              <button
+                onClick={() => setShowGroupModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {/* Imaginea grupului */}
+              <div className="flex flex-col items-center">
+                <input
+                  type="file"
+                  ref={groupImageRef}
+                  accept="image/*"
+                  onChange={handleGroupImageSelect}
+                  className="hidden"
+                />
+                <div 
+                  onClick={() => groupImageRef.current?.click()}
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
+                >
+                  {groupImage ? (
+                    <img src={groupImage} alt="Group" className="w-full h-full object-cover" />
+                  ) : (
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Click pentru a adăuga o imagine</p>
+              </div>
+
+              {/* Numele grupului */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Numele grupului *</label>
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="Ex: Echipa de bucătari"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                />
+              </div>
+
+              {/* Descrierea grupului */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descriere (opțional)</label>
+                <textarea
+                  value={groupDescription}
+                  onChange={(e) => setGroupDescription(e.target.value)}
+                  placeholder="Descrierea grupului..."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900 resize-none"
+                />
+              </div>
+
+              {/* Selectare membri */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Adaugă membri</label>
+                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y">
+                  {allAdmins.map(admin => (
+                    <label 
+                      key={admin.id}
+                      className="flex items-center gap-3 p-2 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.includes(admin.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedMembers([...selectedMembers, admin.id]);
+                          } else {
+                            setSelectedMembers(selectedMembers.filter(id => id !== admin.id));
+                          }
+                        }}
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                      />
+                      {admin.image ? (
+                        <img src={admin.image} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(admin.email)} flex items-center justify-center text-white text-xs font-bold`}>
+                          {getInitials(admin.name, admin.email)}
+                        </div>
+                      )}
+                      <span className="text-sm text-gray-700 truncate">{admin.name || admin.email}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex gap-2 justify-end">
+              <button
+                onClick={() => setShowGroupModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Anulează
+              </button>
+              <button
+                onClick={handleCreateGroup}
+                className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+              >
+                Creează grup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pentru setările grupului */}
+      {showGroupSettings && selectedGroup && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
+          onClick={() => setShowGroupSettings(false)}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">Setări Grup</h3>
+              <button
+                onClick={() => setShowGroupSettings(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {/* Imaginea grupului */}
+              <div className="flex flex-col items-center">
+                <input
+                  type="file"
+                  ref={groupImageRef}
+                  accept="image/*"
+                  onChange={handleGroupImageSelect}
+                  className="hidden"
+                />
+                <div 
+                  onClick={() => groupImageRef.current?.click()}
+                  className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity overflow-hidden relative group"
+                >
+                  {groupImage ? (
+                    <>
+                      <img src={groupImage} alt="Group" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                    </>
+                  ) : (
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => groupImageRef.current?.click()}
+                    className="text-xs text-amber-600 hover:text-amber-700"
+                  >
+                    Schimbă
+                  </button>
+                  {groupImage && (
+                    <button
+                      onClick={() => setGroupImage(null)}
+                      className="text-xs text-red-600 hover:text-red-700"
+                    >
+                      Șterge
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Numele grupului */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Numele grupului</label>
+                <input
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                />
+              </div>
+
+              {/* Descrierea grupului */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descriere</label>
+                <textarea
+                  value={groupDescription}
+                  onChange={(e) => setGroupDescription(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900 resize-none"
+                />
+              </div>
+
+              {/* Gestionare membri */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Membri ({selectedMembers.length})
+                </label>
+                <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg divide-y">
+                  {allAdmins.map(admin => (
+                    <label 
+                      key={admin.id}
+                      className="flex items-center gap-3 p-2 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMembers.includes(admin.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedMembers([...selectedMembers, admin.id]);
+                          } else {
+                            setSelectedMembers(selectedMembers.filter(id => id !== admin.id));
+                          }
+                        }}
+                        className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                      />
+                      {admin.image ? (
+                        <img src={admin.image} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${getAvatarColor(admin.email)} flex items-center justify-center text-white text-xs font-bold`}>
+                          {getInitials(admin.name, admin.email)}
+                        </div>
+                      )}
+                      <span className="text-sm text-gray-700 truncate">{admin.name || admin.email}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex justify-between">
+              <button
+                onClick={() => handleDeleteGroup(selectedGroup.id)}
+                className="px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Șterge grupul
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowGroupSettings(false)}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Anulează
+                </button>
+                <button
+                  onClick={handleUpdateGroup}
+                  className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Salvează
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

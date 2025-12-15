@@ -27,21 +27,26 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "50")
     const receiverId = searchParams.get("receiverId")
+    const groupId = searchParams.get("groupId")
     const before = searchParams.get("before") // pentru paginare
 
     let whereClause = {}
 
-    if (receiverId) {
+    if (groupId) {
+      // Mesaje dintr-un grup specific
+      whereClause = { groupId: groupId }
+    } else if (receiverId) {
       // Mesaje private între utilizatorul curent și receiverId
       whereClause = {
+        groupId: null,
         OR: [
           { senderId: currentUser.id, receiverId: receiverId },
           { senderId: receiverId, receiverId: currentUser.id }
         ]
       }
     } else {
-      // Mesaje de grup (receiverId este null)
-      whereClause = { receiverId: null }
+      // Mesaje de grup general (receiverId și groupId sunt null)
+      whereClause = { receiverId: null, groupId: null }
     }
 
     if (before) {
@@ -81,10 +86,20 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    const { content, receiverId, imageUrl } = body
+    const { content, receiverId, groupId, imageUrl } = body
 
     if ((!content || content.trim() === "") && !imageUrl) {
       return NextResponse.json({ error: "Mesajul nu poate fi gol" }, { status: 400 })
+    }
+
+    // Verifică accesul la grup dacă este specificat
+    if (groupId) {
+      const group = await prisma.chatGroup.findUnique({
+        where: { id: groupId }
+      })
+      if (!group || !group.memberIds.includes(currentUser.id)) {
+        return NextResponse.json({ error: "Nu ai acces la acest grup" }, { status: 403 })
+      }
     }
 
     // Folosește datele din baza de date (actualizate de Google login)
@@ -96,6 +111,7 @@ export async function POST(request) {
         senderEmail: currentUser.email,
         senderImage: currentUser.image, // Folosește imaginea din DB
         receiverId: receiverId || null,
+        groupId: groupId || null,
         imageUrl: imageUrl || null
       }
     })

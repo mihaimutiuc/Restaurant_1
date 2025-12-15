@@ -198,11 +198,24 @@ model Message {
   senderName  String
   senderEmail String?
   senderImage String?
-  receiverId  String?  @db.ObjectId // null pentru mesaje de grup
+  receiverId  String?  @db.ObjectId // null pentru mesaje de grup general
+  groupId     String?  @db.ObjectId // ID-ul grupului (null pentru chat general sau privat)
   imageUrl    String?  // URL pentru imagini atașate
   isRead      Boolean  @default(false)
   isEdited    Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+// Model pentru grupuri de chat
+model ChatGroup {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  image       String?  // Poza de profil a grupului
+  createdBy   String   @db.ObjectId // ID-ul super adminului care a creat grupul
+  memberIds   String[] @db.ObjectId // Array cu ID-urile membrilor
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model AdminStatus {
