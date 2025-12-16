@@ -13,8 +13,6 @@ export default function AdminChatPage() {
   const [onlineAdmins, setOnlineAdmins] = useState([]);
   const [allAdmins, setAllAdmins] = useState([]);
   const [selectedChat, setSelectedChat] = useState('general'); // 'general', ID-ul adminului, sau 'group_ID'
-  const [imagePreview, setImagePreview] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false); // Pentru mobile
   const [enlargedImage, setEnlargedImage] = useState(null); // Pentru zoom imagine
   const [unreadByChat, setUnreadByChat] = useState({}); // Mesaje necitite per chat
@@ -37,8 +35,6 @@ export default function AdminChatPage() {
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const cameraInputRef = useRef(null);
   const groupImageRef = useRef(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
@@ -312,81 +308,6 @@ export default function AdminChatPage() {
     }
   }, [selectedChat]);
 
-  // Upload imagine - convertește în base64 pentru a funcționa pe Vercel
-  const handleImageUpload = async (file) => {
-    if (!file) return null;
-    
-    setUploadingImage(true);
-    
-    try {
-      // Validare dimensiune (max 5MB pentru base64)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Imaginea este prea mare. Dimensiunea maximă este 5MB.');
-        setUploadingImage(false);
-        return null;
-      }
-      
-      // Convertește în base64
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setUploadingImage(false);
-          resolve(e.target.result); // Returnează base64 data URL
-        };
-        reader.onerror = () => {
-          setUploadingImage(false);
-          resolve(null);
-        };
-        reader.readAsDataURL(file);
-      });
-    } catch (error) {
-      console.error('Eroare la procesarea imaginii:', error);
-      setUploadingImage(false);
-      return null;
-    }
-  };
-
-  const handleFileSelect = async (e) => {
-    try {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      
-      // Validare tip
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
-      if (!validTypes.includes(file.type)) {
-        alert('Tip de fișier invalid. Doar imagini (JPG, PNG, WebP, GIF, AVIF).');
-        e.target.value = '';
-        return;
-      }
-      // Validare dimensiune
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Imaginea este prea mare. Dimensiunea maximă este 5MB.');
-        e.target.value = '';
-        return;
-      }
-      // Preview
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImagePreview(event.target?.result);
-      };
-      reader.onerror = () => {
-        console.error('Eroare la citirea fișierului');
-        e.target.value = '';
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Eroare la selectarea fișierului:', error);
-      e.target.value = '';
-    }
-  };
-
-  // Funcție pentru ștergerea imaginii din preview
-  const clearImagePreview = () => {
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
-  };
-
   // Funcție pentru a începe editarea în input-ul principal
   const startEditing = (message) => {
     setEditingMessage(message.id);
@@ -420,21 +341,17 @@ export default function AdminChatPage() {
       return;
     }
     
-    if ((!newMessage.trim() && !imagePreview) || !session?.user) return;
+    if (!newMessage.trim() || !session?.user) return;
 
     setSending(true);
-    
-    // Folosește imagePreview direct (este deja base64)
-    let imageUrl = imagePreview;
 
     try {
       const messageData = {
-        content: newMessage.trim() || (imageUrl ? '📷 Imagine' : ''),
+        content: newMessage.trim(),
         senderId: session.user.id,
         senderName: session.user.name || session.user.email,
         senderEmail: session.user.email,
         senderImage: session.user.image,
-        imageUrl: imageUrl,
       };
 
       // Dacă e mesaj într-un grup
@@ -453,9 +370,6 @@ export default function AdminChatPage() {
 
       if (res.ok) {
         setNewMessage('');
-        setImagePreview(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-        if (cameraInputRef.current) cameraInputRef.current.value = '';
         fetchMessages();
       } else {
         const errorData = await res.json().catch(() => ({}));
@@ -1103,80 +1017,9 @@ export default function AdminChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Image Preview */}
-        {imagePreview && (
-          <div className="p-1.5 sm:p-2 bg-white border-t border-gray-200">
-            <div className="relative inline-block">
-              <img src={imagePreview} alt="Preview" className="h-12 sm:h-16 rounded-lg" />
-              <button 
-                type="button"
-                onClick={clearImagePreview}
-                className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-md"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Message Input */}
         <form onSubmit={handleSendMessage} className="p-1.5 sm:p-3 bg-white border-t border-gray-200">
           <div className="flex items-center gap-0.5 sm:gap-1">
-            {/* File upload button */}
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-              title="Încarcă imagine"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
-
-            {/* Camera button - visible on mobile */}
-            <input 
-              type="file" 
-              ref={cameraInputRef}
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => cameraInputRef.current?.click()}
-              className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 sm:hidden"
-              title="Fă o poză"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-            
-            {/* Camera button - visible on desktop */}
-            <button
-              type="button"
-              onClick={() => cameraInputRef.current?.click()}
-              className="hidden sm:block p-1.5 text-gray-500 hover:text-amber-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-              title="Fă o poză"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-
             {/* Buton anulare editare */}
             {editingMessage && (
               <button
@@ -1207,14 +1050,14 @@ export default function AdminChatPage() {
             {/* Send button */}
             <button
               type="submit"
-              disabled={(!newMessage.trim() && !imagePreview && !editingMessage) || uploadingImage || sending}
+              disabled={(!newMessage.trim() && !editingMessage) || sending}
               className={`p-1.5 text-white rounded-full transition-colors flex-shrink-0 ${
                 editingMessage 
                   ? 'bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed' 
                   : 'bg-amber-500 hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed'
               }`}
             >
-              {(uploadingImage || sending) ? (
+              {sending ? (
                 <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
