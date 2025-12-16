@@ -138,9 +138,7 @@ export default function AdminLayout({ children }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-800">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-              <span className="text-2xl">🍅</span>
-            </div>
+            <span className="text-3xl">🍅</span>
             <div>
               <h1 className="text-white font-bold">La Casa</h1>
               <p className="text-gray-500 text-xs">Admin Panel</p>

@@ -104,9 +104,7 @@ export default function Navbar({ cartItemsCount = 0 }) {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-                <span className="text-3xl">🍅</span>
-              </div>
+              <span className="text-4xl transition-transform duration-300 group-hover:scale-110">🍅</span>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1">
                   <span className="text-lg font-bold text-gray-800">La</span>
@@ -317,9 +315,7 @@ export default function Navbar({ cartItemsCount = 0 }) {
           <div className="p-6 bg-gradient-to-br from-orange-500 to-red-600">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl overflow-hidden flex items-center justify-center">
-                  <span className="text-2xl">🍅</span>
-                </div>
+                <span className="text-3xl">🍅</span>
                 <div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-white font-bold">La</span>
