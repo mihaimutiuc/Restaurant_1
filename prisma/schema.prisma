@@ -204,6 +204,11 @@ model Message {
   isRead      Boolean  @default(false)
   isEdited    Boolean  @default(false)
   createdAt   DateTime @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, senderId])
+  @@index([groupId])
+  @@index([createdAt])
 }
 
 // Model pentru grupuri de chat

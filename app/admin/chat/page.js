@@ -341,17 +341,13 @@ export default function AdminChatPage() {
       return;
     }
     
-    if (!newMessage.trim() || !session?.user) return;
+    if (!newMessage.trim() || !session?.user?.id) return;
 
     setSending(true);
 
     try {
       const messageData = {
         content: newMessage.trim(),
-        senderId: session.user.id,
-        senderName: session.user.name || session.user.email,
-        senderEmail: session.user.email,
-        senderImage: session.user.image,
       };
 
       // Dacă e mesaj într-un grup

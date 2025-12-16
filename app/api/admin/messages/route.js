@@ -27,36 +27,51 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit") || "50")
     const receiverId = searchParams.get("receiverId")
     const groupId = searchParams.get("groupId")
-    const before = searchParams.get("before") // pentru paginare
 
-    let whereClause = {}
+    let messages = []
 
     if (groupId) {
       // Mesaje dintr-un grup specific
-      whereClause = { groupId: groupId }
+      messages = await prisma.message.findMany({
+        where: { groupId: groupId },
+        orderBy: { createdAt: "desc" },
+        take: limit
+      })
     } else if (receiverId) {
-      // Mesaje private între utilizatorul curent și receiverId
-      whereClause = {
-        groupId: null,
-        OR: [
-          { senderId: currentUser.id, receiverId: receiverId },
-          { senderId: receiverId, receiverId: currentUser.id }
-        ]
-      }
+      // Mesaje private - folosim două query-uri separate pentru performanță
+      const [sent, received] = await Promise.all([
+        prisma.message.findMany({
+          where: {
+            senderId: currentUser.id,
+            receiverId: receiverId,
+            groupId: null
+          },
+          orderBy: { createdAt: "desc" },
+          take: limit
+        }),
+        prisma.message.findMany({
+          where: {
+            senderId: receiverId,
+            receiverId: currentUser.id,
+            groupId: null
+          },
+          orderBy: { createdAt: "desc" },
+          take: limit
+        })
+      ])
+      
+      // Combinăm și sortăm
+      messages = [...sent, ...received]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, limit)
     } else {
       // Mesaje de grup general (receiverId și groupId sunt null)
-      whereClause = { receiverId: null, groupId: null }
+      messages = await prisma.message.findMany({
+        where: { receiverId: null, groupId: null },
+        orderBy: { createdAt: "desc" },
+        take: limit
+      })
     }
-
-    if (before) {
-      whereClause.createdAt = { lt: new Date(before) }
-    }
-
-    const messages = await prisma.message.findMany({
-      where: whereClause,
-      orderBy: { createdAt: "desc" },
-      take: limit
-    })
 
     // Inversează pentru a avea mesajele în ordine cronologică
     return NextResponse.json({ messages: messages.reverse() })
@@ -90,11 +105,9 @@ export async function POST(request) {
     }
 
     const body = await request.json()
-    const { content, receiverId, groupId, imageUrl } = body
+    const { content, receiverId, groupId } = body
 
-    console.log("POST /api/admin/messages - Content:", content?.substring(0, 50), "hasImage:", !!imageUrl, "receiverId:", receiverId, "groupId:", groupId)
-
-    if ((!content || content.trim() === "") && !imageUrl) {
+    if (!content || content.trim() === "") {
       return NextResponse.json({ error: "Mesajul nu poate fi gol" }, { status: 400 })
     }
 
@@ -111,18 +124,16 @@ export async function POST(request) {
     // Folosește datele din baza de date (actualizate de Google login)
     const message = await prisma.message.create({
       data: {
-        content: content?.trim() || '',
+        content: content.trim(),
         senderId: currentUser.id,
         senderName: currentUser.name || currentUser.email,
         senderEmail: currentUser.email,
         senderImage: currentUser.image,
         receiverId: receiverId || null,
-        groupId: groupId || null,
-        imageUrl: imageUrl || null
+        groupId: groupId || null
       }
     })
 
-    console.log("POST /api/admin/messages - Message created:", message.id)
     return NextResponse.json(message)
   } catch (error) {
     console.error("Error creating message:", error)
