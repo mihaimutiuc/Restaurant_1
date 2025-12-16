@@ -449,6 +449,7 @@ export default function CheckoutPage() {
                               <span className="font-medium">Plată securizată prin PayPal</span>
                             </div>
                             <PayPalButtons
+                              key={`paypal-${getOrderTotal()}-${cartItems.map(i => `${i.productId}-${i.quantity}`).join('-')}`}
                               style={{ 
                                 layout: "vertical",
                                 color: "gold",
@@ -465,7 +466,7 @@ export default function CheckoutPage() {
                               onCancel={() => {
                                 console.log("Payment cancelled")
                               }}
-                            />
+                              forceReRender={[getOrderTotal(), cartItems.length, ...cartItems.map(i => i.quantity)]}
                           </div>
                         </PayPalScriptProvider>
                       ) : (
