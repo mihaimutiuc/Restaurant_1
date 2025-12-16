@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 import { useCart } from "../context/CartContext"
 import Navbar from "../components/Navbar"
 import Footer from "../components/Footer"
@@ -26,13 +27,22 @@ export default function CheckoutPage() {
     isLoading 
   } = useCart()
   const [isOrdering, setIsOrdering] = useState(false)
+  const [paypalClientId, setPaypalClientId] = useState(null)
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     address: "",
     notes: "",
-    paymentMethod: "card",
   })
+  const [formValid, setFormValid] = useState(false)
+
+  // Obține PayPal Client ID
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
+    if (clientId) {
+      setPaypalClientId(clientId)
+    }
+  }, [])
 
   // Actualizează numele când sesiunea se încarcă
   useEffect(() => {
@@ -41,6 +51,12 @@ export default function CheckoutPage() {
     }
   }, [session?.user?.name])
 
+  // Validează formularul
+  useEffect(() => {
+    const isValid = formData.name.trim() && formData.phone.trim() && formData.address.trim()
+    setFormValid(isValid)
+  }, [formData])
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -48,39 +64,55 @@ export default function CheckoutPage() {
     })
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!session) {
-      router.push("/auth/login")
-      return
-    }
-
-    setIsOrdering(true)
-    
+  // Creează comanda PayPal
+  const createOrder = async () => {
     try {
-      const response = await fetch("/api/orders", {
+      const response = await fetch("/api/paypal/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Eroare la crearea comenzii")
+      }
+
+      const data = await response.json()
+      return data.id
+    } catch (error) {
+      console.error("Error creating PayPal order:", error)
+      alert(error.message || "Eroare la crearea comenzii PayPal")
+      throw error
+    }
+  }
+
+  // Capturează plata PayPal
+  const onApprove = async (data) => {
+    setIsOrdering(true)
+    try {
+      const response = await fetch("/api/paypal/capture-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          orderID: data.orderID,
           deliveryAddress: formData.address,
           phone: formData.phone,
           notes: formData.notes,
-          paymentMethod: formData.paymentMethod
-        })
+        }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        // Redirecționează la pagina de comenzi
-        router.push(`/orders?newOrder=${data.order.id}`)
-      } else {
+      if (!response.ok) {
         const error = await response.json()
-        alert(error.error || "Eroare la plasarea comenzii")
+        throw new Error(error.error || "Eroare la procesarea plății")
       }
+
+      const result = await response.json()
+      
+      // Redirecționează la pagina de comenzi
+      router.push(`/orders?newOrder=${result.order.id}`)
     } catch (error) {
-      console.error("Error placing order:", error)
-      alert("Eroare la plasarea comenzii")
+      console.error("Error capturing PayPal payment:", error)
+      alert(error.message || "Eroare la procesarea plății")
     } finally {
       setIsOrdering(false)
     }
@@ -239,7 +271,7 @@ export default function CheckoutPage() {
 
                   {/* Delivery Form */}
                   {session ? (
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Nume complet
@@ -281,20 +313,6 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Metoda de plată
-                        </label>
-                        <select
-                          name="paymentMethod"
-                          value={formData.paymentMethod}
-                          onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
-                        >
-                          <option value="card">Card (plată online)</option>
-                          <option value="cash">Numerar la livrare</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Notițe (opțional)
                         </label>
                         <textarea
@@ -306,26 +324,55 @@ export default function CheckoutPage() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-gray-900"
                         />
                       </div>
-                      <button
-                        type="submit"
-                        disabled={isOrdering}
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        {isOrdering ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Se procesează...
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Plasează comanda
-                          </>
-                        )}
-                      </button>
-                    </form>
+
+                      {/* PayPal Button */}
+                      {!formValid ? (
+                        <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-600">
+                          <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-sm">Completează toate câmpurile pentru a plăti</p>
+                        </div>
+                      ) : isOrdering ? (
+                        <div className="p-4 bg-orange-50 rounded-lg text-center">
+                          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <p className="text-orange-700 font-medium">Se procesează comanda...</p>
+                        </div>
+                      ) : paypalClientId ? (
+                        <PayPalScriptProvider options={{ 
+                          clientId: paypalClientId,
+                          currency: "RON",
+                          intent: "capture"
+                        }}>
+                          <div className="paypal-button-container">
+                            <p className="text-sm text-gray-600 mb-3 text-center">
+                              🔒 Plată securizată prin PayPal
+                            </p>
+                            <PayPalButtons
+                              style={{ 
+                                layout: "vertical",
+                                color: "gold",
+                                shape: "rect",
+                                label: "paypal"
+                              }}
+                              createOrder={createOrder}
+                              onApprove={onApprove}
+                              onError={(err) => {
+                                console.error("PayPal error:", err)
+                                alert("Eroare la procesarea plății. Încearcă din nou.")
+                              }}
+                              onCancel={() => {
+                                console.log("Payment cancelled")
+                              }}
+                            />
+                          </div>
+                        </PayPalScriptProvider>
+                      ) : (
+                        <div className="p-4 bg-red-50 rounded-lg text-center text-red-600">
+                          <p className="text-sm">Plățile online nu sunt configurate momentan.</p>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="text-center">
                       <p className="text-gray-600 mb-4">

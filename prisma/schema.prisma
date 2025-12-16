@@ -141,8 +141,10 @@ model Order {
   notes           String?     // Note de la client
   adminNotes      String?     // Note interne admin
   assignedTo      String?     // Cine se ocupă de comandă
-  paymentMethod   String      @default("card")
+  paymentMethod   String      @default("paypal")
   isPaid          Boolean     @default(false)
+  paypalOrderId   String?     // ID-ul comenzii PayPal
+  paypalCaptureId String?     // ID-ul capturii PayPal
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   stageUpdatedAt  DateTime    @default(now())
