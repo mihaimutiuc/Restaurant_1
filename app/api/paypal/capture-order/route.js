@@ -11,10 +11,11 @@ const PAYPAL_API = process.env.PAYPAL_MODE === 'live'
 
 // Obține access token pentru PayPal API
 async function getPayPalAccessToken() {
-  const clientId = process.env.PAYPAL_CLIENT_ID
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET
   
   if (!clientId || !clientSecret) {
+    console.error('PayPal credentials missing')
     throw new Error('PayPal credentials not configured')
   }
   
@@ -30,7 +31,9 @@ async function getPayPalAccessToken() {
   })
   
   if (!response.ok) {
-    throw new Error('Failed to get PayPal access token')
+    const errorText = await response.text()
+    console.error('PayPal auth error:', response.status, errorText)
+    throw new Error(`Failed to get PayPal access token: ${response.status}`)
   }
   
   const data = await response.json()
@@ -66,17 +69,21 @@ export async function POST(request) {
 
     if (!captureResponse.ok) {
       const error = await captureResponse.json()
-      console.error('PayPal capture error:', error)
-      return NextResponse.json({ error: 'Eroare la procesarea plății' }, { status: 500 })
+      console.error('PayPal capture error:', JSON.stringify(error, null, 2))
+      return NextResponse.json({ 
+        error: 'Eroare la procesarea plății',
+        details: error.message || error.details?.[0]?.description
+      }, { status: 500 })
     }
 
     const captureData = await captureResponse.json()
+    console.log('PayPal capture status:', captureData.status)
 
     if (captureData.status !== 'COMPLETED') {
       return NextResponse.json({ error: 'Plata nu a fost finalizată' }, { status: 400 })
     }
 
-    // Obține coșul utilizatorului
+    // SECURITATE: Obține coșul și prețurile din baza de date
     const cart = await prisma.cart.findUnique({
       where: { userId: session.user.id },
       include: { items: true }
@@ -86,8 +93,35 @@ export async function POST(request) {
       return NextResponse.json({ error: "Coșul este gol" }, { status: 400 })
     }
 
-    // Calculează subtotalul
-    const subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    // SECURITATE: Verifică prețurile produselor din baza de date
+    const productIds = cart.items.map(item => item.productId)
+    const products = await prisma.product.findMany({
+      where: { productId: { in: productIds } },
+      select: { productId: true, price: true, preparationTime: true }
+    })
+
+    const productMap = {}
+    products.forEach(p => {
+      productMap[p.productId] = { price: p.price, preparationTime: p.preparationTime || 10 }
+    })
+
+    // Calculează subtotalul folosind prețurile din DB (nu din coș)
+    let subtotal = 0
+    const verifiedItems = []
+    
+    for (const item of cart.items) {
+      const product = productMap[item.productId]
+      if (!product) {
+        console.error('Invalid product:', item.productId)
+        return NextResponse.json({ error: `Produs invalid: ${item.name}` }, { status: 400 })
+      }
+      subtotal += product.price * item.quantity
+      verifiedItems.push({
+        ...item,
+        price: product.price, // Folosește prețul din DB
+        preparationTime: product.preparationTime
+      })
+    }
     
     // Calculează taxa de livrare
     const DELIVERY_FEE = 20
@@ -96,29 +130,16 @@ export async function POST(request) {
     
     const total = subtotal + deliveryFee
 
-    // Obține timpii de preparare pentru fiecare produs
-    const productIds = cart.items.map(item => item.productId)
-    const products = await prisma.product.findMany({
-      where: { productId: { in: productIds } },
-      select: { productId: true, preparationTime: true }
-    })
-
-    const prepTimeMap = {}
-    products.forEach(p => {
-      prepTimeMap[p.productId] = p.preparationTime
-    })
-
     // Calculează timpul estimat
     let maxPrepTime = 0
-    cart.items.forEach(item => {
-      const prepTime = prepTimeMap[item.productId] || 10
-      maxPrepTime = Math.max(maxPrepTime, prepTime)
+    verifiedItems.forEach(item => {
+      maxPrepTime = Math.max(maxPrepTime, item.preparationTime)
     })
 
-    const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0)
+    const totalItems = verifiedItems.reduce((sum, item) => sum + item.quantity, 0)
     const estimatedTime = maxPrepTime + Math.max(0, (totalItems - 1) * 2) + 15
 
-    // Creează comanda în baza de date
+    // Creează comanda în baza de date cu prețurile verificate
     const order = await prisma.order.create({
       data: {
         userId: session.user.id,
@@ -135,13 +156,13 @@ export async function POST(request) {
         status: "CONFIRMED",
         stage: "RECEIVED",
         items: {
-          create: cart.items.map(item => ({
+          create: verifiedItems.map(item => ({
             productId: item.productId,
             name: item.name,
-            price: item.price,
+            price: item.price, // Preț verificat din DB
             image: item.image,
             quantity: item.quantity,
-            preparationTime: prepTimeMap[item.productId] || 10
+            preparationTime: item.preparationTime
           }))
         }
       },
@@ -152,6 +173,8 @@ export async function POST(request) {
     await prisma.cartItem.deleteMany({
       where: { cartId: cart.id }
     })
+
+    console.log('Order created:', order.id)
 
     return NextResponse.json({ 
       success: true,

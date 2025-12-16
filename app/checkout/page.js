@@ -341,7 +341,7 @@ export default function CheckoutPage() {
                       ) : paypalClientId ? (
                         <PayPalScriptProvider options={{ 
                           clientId: paypalClientId,
-                          currency: "RON",
+                          currency: "EUR",
                           intent: "capture"
                         }}>
                           <div className="paypal-button-container">
