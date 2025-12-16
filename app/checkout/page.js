@@ -467,6 +467,7 @@ export default function CheckoutPage() {
                                 console.log("Payment cancelled")
                               }}
                               forceReRender={[getOrderTotal(), cartItems.length, ...cartItems.map(i => i.quantity)]}
+                            />
                           </div>
                         </PayPalScriptProvider>
                       ) : (
