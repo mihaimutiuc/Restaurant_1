@@ -200,7 +200,6 @@ model Message {
   senderImage String?
   receiverId  String?  @db.ObjectId // null pentru mesaje de grup general
   groupId     String?  @db.ObjectId // ID-ul grupului (null pentru chat general sau privat)
-  imageUrl    String?  // URL pentru imagini atașate
   isRead      Boolean  @default(false)
   isEdited    Boolean  @default(false)
   createdAt   DateTime @default(now())

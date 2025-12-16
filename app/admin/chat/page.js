@@ -14,7 +14,6 @@ export default function AdminChatPage() {
   const [allAdmins, setAllAdmins] = useState([]);
   const [selectedChat, setSelectedChat] = useState('general'); // 'general', ID-ul adminului, sau 'group_ID'
   const [sidebarOpen, setSidebarOpen] = useState(false); // Pentru mobile
-  const [enlargedImage, setEnlargedImage] = useState(null); // Pentru zoom imagine
   const [unreadByChat, setUnreadByChat] = useState({}); // Mesaje necitite per chat
   const [editingMessage, setEditingMessage] = useState(null); // Mesajul în curs de editare
   const [editContent, setEditContent] = useState(''); // Conținutul editat
@@ -343,11 +342,33 @@ export default function AdminChatPage() {
     
     if (!newMessage.trim() || !session?.user?.id) return;
 
-    setSending(true);
+    const messageContent = newMessage.trim();
+    
+    // Optimistic UI - adaugă mesajul instant în UI
+    const tempId = `temp_${Date.now()}`;
+    const optimisticMessage = {
+      id: tempId,
+      content: messageContent,
+      senderId: session.user.id,
+      senderName: session.user.name || session.user.email,
+      senderEmail: session.user.email,
+      senderImage: session.user.image,
+      createdAt: new Date().toISOString(),
+      isOptimistic: true,
+      receiverId: selectedChat !== 'general' && !selectedChat.startsWith('group_') ? selectedChat : null,
+      groupId: selectedChat.startsWith('group_') ? selectedChat.replace('group_', '') : null,
+    };
+    
+    // Adaugă mesajul instant
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage('');
+    
+    // Scroll la capăt
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
     try {
       const messageData = {
-        content: newMessage.trim(),
+        content: messageContent,
       };
 
       // Dacă e mesaj într-un grup
@@ -365,18 +386,23 @@ export default function AdminChatPage() {
       });
 
       if (res.ok) {
-        setNewMessage('');
-        fetchMessages();
+        const savedMessage = await res.json();
+        // Înlocuiește mesajul optimistic cu cel real
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempId ? { ...savedMessage, isOptimistic: false } : msg
+        ));
       } else {
+        // Elimină mesajul optimistic în caz de eroare
+        setMessages(prev => prev.filter(msg => msg.id !== tempId));
         const errorData = await res.json().catch(() => ({}));
         console.error('Eroare server:', res.status, errorData);
         alert(`Eroare ${res.status}: ${errorData.error || errorData.details || 'Încearcă din nou.'}`);
       }
     } catch (error) {
+      // Elimină mesajul optimistic în caz de eroare
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
       console.error('Eroare la trimiterea mesajului:', error);
       alert(`Eroare de conexiune: ${error.message}`);
-    } finally {
-      setSending(false);
     }
   };
 
@@ -972,17 +998,8 @@ export default function AdminChatPage() {
                             : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
                         } ${isEditing ? 'ring-2 ring-amber-300' : ''}`}
                       >
-                        {message.imageUrl && (
-                          <img 
-                            src={message.imageUrl} 
-                            alt="Imagine" 
-                            className="max-w-full max-h-40 sm:max-h-56 rounded-lg mb-1 cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setEnlargedImage(message.imageUrl)}
-                          />
-                        )}
-                        
                         {/* Conținutul mesajului - cu indicator dacă e în editare */}
-                        {message.content && message.content !== '📷 Imagine' && (
+                        {message.content && (
                           <p className="break-words text-xs sm:text-sm">{message.content}</p>
                         )}
                         {isEditing && (
@@ -1071,29 +1088,6 @@ export default function AdminChatPage() {
           </div>
         </form>
       </div>
-
-      {/* Modal pentru imaginea mărită */}
-      {enlargedImage && (
-        <div 
-          className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-2 sm:p-4"
-          onClick={() => setEnlargedImage(null)}
-        >
-          <button
-            onClick={() => setEnlargedImage(null)}
-            className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
-          >
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <img 
-            src={enlargedImage} 
-            alt="Imagine mărită" 
-            className="max-w-full max-h-full object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
 
       {/* Modal pentru crearea unui grup nou */}
       {showGroupModal && (
