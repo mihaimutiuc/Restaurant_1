@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Restaurant App",
+  title: "🍅 La Casa - Restaurant & Bar",
   description: "Aplicație restaurant cu autentificare",
 };
 
