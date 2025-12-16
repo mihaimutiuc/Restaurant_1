@@ -122,9 +122,9 @@ export async function POST(request) {
     // Calculează subtotalul
     const subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
     
-    // Calculează taxa de livrare: gratis peste 100 RON, altfel 20 RON
-    const DELIVERY_FEE = 20
-    const FREE_DELIVERY_THRESHOLD = 100
+    // Calculează taxa de livrare: gratis peste 20 EUR, altfel 4 EUR
+    const DELIVERY_FEE = 4
+    const FREE_DELIVERY_THRESHOLD = 20
     const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
     
     // Totalul final include taxa de livrare

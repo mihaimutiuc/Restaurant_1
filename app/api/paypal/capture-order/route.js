@@ -123,9 +123,9 @@ export async function POST(request) {
       })
     }
     
-    // Calculează taxa de livrare
-    const DELIVERY_FEE = 20
-    const FREE_DELIVERY_THRESHOLD = 100
+    // Calculează taxa de livrare (în EUR)
+    const DELIVERY_FEE = 4
+    const FREE_DELIVERY_THRESHOLD = 20
     const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
     
     const total = subtotal + deliveryFee

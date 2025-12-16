@@ -79,7 +79,7 @@ export async function GET(request) {
     return NextResponse.json({
       categories: formattedCategories,
       items: formattedProducts,
-      currency: "RON",
+      currency: "EUR",
       addToCartLabel: "Adaugă",
       viewDetailsLabel: "Vezi detalii",
       sectionTitle: "Meniul Nostru",

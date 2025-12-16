@@ -68,7 +68,7 @@ export default function AdminDashboard() {
     },
     { 
       label: "Venituri azi", 
-      value: `${stats?.revenueToday || 0} RON`, 
+      value: `${stats?.revenueToday || 0} EUR`, 
       icon: RevenueIcon, 
       color: "green",
       change: "+8%"
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span className="font-semibold text-gray-900">{order.total} RON</span>
+                    <span className="font-semibold text-gray-900">{order.total} EUR</span>
                     <span>
                       {new Date(order.createdAt).toLocaleDateString('ro-RO', { 
                         day: '2-digit', 
@@ -212,7 +212,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-semibold text-gray-900">{order.total} RON</span>
+                        <span className="text-sm font-semibold text-gray-900">{order.total} EUR</span>
                       </td>
                       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>

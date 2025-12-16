@@ -322,7 +322,7 @@ export default function AdminProductsPage() {
                     <h3 className="font-semibold text-gray-900 text-xs sm:text-base truncate">{product.name}</h3>
                     <p className="text-[10px] sm:text-sm text-orange-500">{product.category?.name}</p>
                   </div>
-                  <p className="font-bold text-sm sm:text-lg text-gray-900">{product.price} RON</p>
+                  <p className="font-bold text-sm sm:text-lg text-gray-900">{product.price} EUR</p>
                 </div>
                 
                 {product.description && (
@@ -431,7 +431,7 @@ export default function AdminProductsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preț (RON) *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Preț (EUR) *</label>
                   <input
                     type="number"
                     step="0.01"

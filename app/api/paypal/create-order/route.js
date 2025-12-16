@@ -9,9 +9,6 @@ const PAYPAL_API = process.env.PAYPAL_MODE === 'live'
   ? 'https://api-m.paypal.com' 
   : 'https://api-m.sandbox.paypal.com'
 
-// Curs de schimb RON -> EUR (aproximativ)
-const RON_TO_EUR = 0.20
-
 // Obține access token pentru PayPal API
 async function getPayPalAccessToken() {
   const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
@@ -74,7 +71,7 @@ export async function POST(request) {
       productPriceMap[p.productId] = p.price
     })
 
-    // Calculează subtotalul folosind prețurile din baza de date (nu din coș)
+    // Calculează subtotalul folosind prețurile din baza de date (nu din coș) - în EUR
     let subtotal = 0
     const verifiedItems = cart.items.map(item => {
       const dbPrice = productPriceMap[item.productId]
@@ -89,38 +86,33 @@ export async function POST(request) {
       }
     })
     
-    // Calculează taxa de livrare
-    const DELIVERY_FEE = 20
-    const FREE_DELIVERY_THRESHOLD = 100
+    // Calculează taxa de livrare (în EUR)
+    const DELIVERY_FEE = 4
+    const FREE_DELIVERY_THRESHOLD = 20
     const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
     
-    // Totalul final în RON
-    const totalRON = subtotal + deliveryFee
-    
-    // Convertește în EUR pentru PayPal (PayPal sandbox nu suportă RON)
-    const subtotalEUR = (subtotal * RON_TO_EUR).toFixed(2)
-    const deliveryFeeEUR = (deliveryFee * RON_TO_EUR).toFixed(2)
-    const totalEUR = (totalRON * RON_TO_EUR).toFixed(2)
+    // Totalul final în EUR
+    const total = subtotal + deliveryFee
 
     // Obține access token
     const accessToken = await getPayPalAccessToken()
 
-    // Creează comanda PayPal cu EUR
+    // Creează comanda PayPal în EUR
     const orderData = {
       intent: 'CAPTURE',
       purchase_units: [{
-        description: `Comandă restaurant - ${totalRON.toFixed(2)} RON`,
+        description: `Comandă restaurant - ${total.toFixed(2)} EUR`,
         amount: {
           currency_code: 'EUR',
-          value: totalEUR,
+          value: total.toFixed(2),
           breakdown: {
             item_total: {
               currency_code: 'EUR',
-              value: subtotalEUR
+              value: subtotal.toFixed(2)
             },
             shipping: {
               currency_code: 'EUR',
-              value: deliveryFeeEUR
+              value: deliveryFee.toFixed(2)
             }
           }
         },
@@ -128,7 +120,7 @@ export async function POST(request) {
           name: item.name.substring(0, 127), // PayPal limit
           unit_amount: {
             currency_code: 'EUR',
-            value: (item.price * RON_TO_EUR).toFixed(2)
+            value: item.price.toFixed(2)
           },
           quantity: item.quantity.toString()
         }))

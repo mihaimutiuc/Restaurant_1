@@ -170,7 +170,7 @@ export default function AdminOrdersPage() {
                         <p className="text-sm font-medium text-gray-900">{order.user?.name || "N/A"}</p>
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-gray-900">{order.total} RON</span>
+                    <span className="text-sm font-bold text-gray-900">{order.total} EUR</span>
                   </div>
                   
                   <div className="flex items-center justify-between mb-2">
@@ -311,9 +311,9 @@ export default function AdminOrdersPage() {
                       <p className="text-xs text-gray-500 mt-1">{order.items?.length} produse</p>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm font-semibold text-gray-900">{order.total} RON</p>
+                      <p className="text-sm font-semibold text-gray-900">{order.total} EUR</p>
                       {order.deliveryFee > 0 && (
-                        <p className="text-xs text-gray-500">+ {order.deliveryFee} RON livrare</p>
+                        <p className="text-xs text-gray-500">+ {order.deliveryFee} EUR livrare</p>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -455,9 +455,9 @@ export default function AdminOrdersPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{item.name}</p>
-                        <p className="text-sm text-gray-500">{item.quantity} x {item.price} RON</p>
+                        <p className="text-sm text-gray-500">{item.quantity} x {item.price} EUR</p>
                       </div>
-                      <p className="font-semibold text-gray-900">{item.quantity * item.price} RON</p>
+                      <p className="font-semibold text-gray-900">{item.quantity * item.price} EUR</p>
                     </div>
                   ))}
                 </div>
@@ -467,15 +467,15 @@ export default function AdminOrdersPage() {
               <div className="bg-orange-50 p-4 rounded-xl">
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">{selectedOrder.total - (selectedOrder.deliveryFee || 0)} RON</span>
+                  <span className="font-medium">{selectedOrder.total - (selectedOrder.deliveryFee || 0)} EUR</span>
                 </div>
                 <div className="flex justify-between mb-2">
                   <span className="text-gray-600">Livrare</span>
-                  <span className="font-medium">{selectedOrder.deliveryFee || 0} RON</span>
+                  <span className="font-medium">{selectedOrder.deliveryFee || 0} EUR</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-orange-200">
                   <span className="font-semibold text-gray-900">Total</span>
-                  <span className="font-bold text-orange-600 text-lg">{selectedOrder.total} RON</span>
+                  <span className="font-bold text-orange-600 text-lg">{selectedOrder.total} EUR</span>
                 </div>
               </div>
 

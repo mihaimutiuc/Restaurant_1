@@ -95,7 +95,7 @@ export async function GET(request, { params }) {
       product: formattedProduct,
       relatedProducts: formattedRelated,
       categories: formattedCategories,
-      currency: "RON"
+      currency: "EUR"
     })
   } catch (error) {
     console.error("Error fetching product:", error)

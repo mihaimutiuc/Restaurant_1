@@ -223,7 +223,7 @@ function OrderCard({ order, isNew }) {
           {order.items.map((item, index) => (
             <div key={index} className="flex justify-between text-gray-600">
               <span>{item.quantity}x {item.name}</span>
-              <span>{(item.price * item.quantity).toFixed(2)} RON</span>
+              <span>{(item.price * item.quantity).toFixed(2)} EUR</span>
             </div>
           ))}
         </div>
@@ -247,7 +247,7 @@ function OrderCard({ order, isNew }) {
         {/* Order Total */}
         <div className="flex justify-between items-center pt-4 mt-4 border-t">
           <span className="font-semibold text-gray-800">Total</span>
-          <span className="text-xl font-bold text-orange-500">{order.total.toFixed(2)} RON</span>
+          <span className="text-xl font-bold text-orange-500">{order.total.toFixed(2)} EUR</span>
         </div>
       </div>
     </div>

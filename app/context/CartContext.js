@@ -198,9 +198,9 @@ export function CartProvider({ children }) {
     return cartItems.reduce((count, item) => count + item.quantity, 0)
   }
 
-  // Calculează taxa de livrare: gratis peste 100 RON, altfel 20 RON
-  const DELIVERY_FEE = 20
-  const FREE_DELIVERY_THRESHOLD = 100
+  // Calculează taxa de livrare: gratis peste 20 EUR, altfel 4 EUR
+  const DELIVERY_FEE = 4
+  const FREE_DELIVERY_THRESHOLD = 20
 
   const getDeliveryFee = () => {
     const subtotal = getCartTotal()

@@ -212,7 +212,7 @@ export default function CheckoutPage() {
                             </svg>
                           </button>
                         </div>
-                        <p className="text-orange-600 font-bold text-sm mt-0.5">{item.price} RON</p>
+                        <p className="text-orange-600 font-bold text-sm mt-0.5">{item.price} EUR</p>
                         
                         {/* Quantity & Total Row */}
                         <div className="flex items-center justify-between mt-2">
@@ -232,7 +232,7 @@ export default function CheckoutPage() {
                             </button>
                           </div>
                           <p className="font-bold text-gray-900 text-base">
-                            {item.price * item.quantity} <span className="text-orange-500">RON</span>
+                            {item.price * item.quantity} <span className="text-orange-500">EUR</span>
                           </p>
                         </div>
                       </div>
@@ -259,7 +259,7 @@ export default function CheckoutPage() {
                       {/* Item Info */}
                       <div className="flex-grow min-w-0">
                         <h3 className="font-bold text-gray-900 text-base md:text-lg truncate">{item.name}</h3>
-                        <p className="text-orange-600 font-bold mt-1">{item.price} RON / buc</p>
+                        <p className="text-orange-600 font-bold mt-1">{item.price} EUR / buc</p>
                       </div>
 
                       {/* Quantity Controls */}
@@ -282,7 +282,7 @@ export default function CheckoutPage() {
                       {/* Item Total */}
                       <div className="text-right w-24 md:w-28">
                         <p className="font-bold text-xl text-gray-900">
-                          {item.price * item.quantity} <span className="text-orange-500 text-sm">RON</span>
+                          {item.price * item.quantity} <span className="text-orange-500 text-sm">EUR</span>
                         </p>
                       </div>
 
@@ -321,7 +321,7 @@ export default function CheckoutPage() {
                   {getAmountUntilFreeDelivery() > 0 && (
                     <div className="mb-4 sm:mb-5 p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
                       <p className="text-sm text-orange-800 font-medium">
-                        🚚 Mai adaugă <span className="font-bold text-orange-600">{getAmountUntilFreeDelivery()} RON</span> pentru livrare gratuită!
+                        🚚 Mai adaugă <span className="font-bold text-orange-600">{getAmountUntilFreeDelivery()} EUR</span> pentru livrare gratuită!
                       </p>
                       <div className="mt-2 w-full bg-orange-200 rounded-full h-2.5 overflow-hidden">
                         <div 
@@ -336,14 +336,14 @@ export default function CheckoutPage() {
                   <div className="space-y-3 mb-5 sm:mb-6 bg-gray-50 rounded-xl p-3 sm:p-4">
                     <div className="flex justify-between text-gray-700">
                       <span className="text-sm sm:text-base">Subtotal</span>
-                      <span className="font-semibold">{getCartTotal()} RON</span>
+                      <span className="font-semibold">{getCartTotal()} EUR</span>
                     </div>
                     <div className="flex justify-between text-gray-700">
                       <span className="text-sm sm:text-base">Livrare</span>
                       {getDeliveryFee() === 0 ? (
                         <span className="text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded-lg text-sm">GRATIS</span>
                       ) : (
-                        <span className="font-semibold">{getDeliveryFee()} RON</span>
+                        <span className="font-semibold">{getDeliveryFee()} EUR</span>
                       )}
                     </div>
                     {getDeliveryFee() === 0 && (
@@ -357,7 +357,7 @@ export default function CheckoutPage() {
                     <div className="border-t-2 border-dashed border-gray-200 pt-3 mt-3">
                       <div className="flex justify-between items-center">
                         <span className="text-base sm:text-lg font-bold text-gray-900">Total</span>
-                        <span className="text-xl sm:text-2xl font-bold text-orange-600">{getOrderTotal()} RON</span>
+                        <span className="text-xl sm:text-2xl font-bold text-orange-600">{getOrderTotal()} EUR</span>
                       </div>
                     </div>
                   </div>
