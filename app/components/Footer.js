@@ -60,14 +60,8 @@ export default function Footer() {
           {/* Logo & Description - Takes 4 columns */}
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex items-center gap-3 mb-6 group">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
-                <Image
-                  src="/logo.png"
-                  alt="La Casa Logo"
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                <span className="text-3xl">🍅</span>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1">

@@ -138,14 +138,8 @@ export default function AdminLayout({ children }) {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-800">
-            <div className="w-10 h-10 rounded-xl overflow-hidden">
-              <Image
-                src="/logo.png"
-                alt="La Casa Logo"
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+              <span className="text-2xl">🍅</span>
             </div>
             <div>
               <h1 className="text-white font-bold">La Casa</h1>

@@ -64,6 +64,19 @@ export default function Navbar({ cartItemsCount = 0 }) {
 
   const pathname = usePathname()
 
+  // Generează href-ul corect pentru link-uri
+  const getHref = (href) => {
+    if (href.startsWith("#")) {
+      // Dacă suntem pe homepage, folosește anchor direct
+      if (pathname === "/") {
+        return href
+      }
+      // Altfel, navighează la homepage + anchor
+      return "/" + href
+    }
+    return href
+  }
+
   const handleNavClick = (e, href) => {
     // Dacă suntem pe pagina principală și link-ul este un anchor
     if (href.startsWith("#") && pathname === "/") {
@@ -72,11 +85,8 @@ export default function Navbar({ cartItemsCount = 0 }) {
       if (element) {
         element.scrollIntoView({ behavior: "smooth" })
       }
-    } else if (href === "#hero" || href === "/") {
-      // Link-ul Acasă duce la pagina principală
-      e.preventDefault()
-      window.location.href = "/"
     }
+    // Dacă nu suntem pe homepage, lasă browser-ul să navigheze normal cu href-ul generat
     setIsMenuOpen(false)
     setIsUserMenuOpen(false)
   }
@@ -94,14 +104,8 @@ export default function Navbar({ cartItemsCount = 0 }) {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
-                <Image
-                  src="/logo.png"
-                  alt="La Casa Logo"
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                <span className="text-3xl">🍅</span>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1">
@@ -120,7 +124,7 @@ export default function Navbar({ cartItemsCount = 0 }) {
                 {links.map((link) => (
                   <a
                     key={link.id}
-                    href={link.href}
+                    href={getHref(link.href)}
                     onClick={(e) => handleNavClick(e, link.href)}
                     className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                       activeSection === link.href.replace("#", "")
@@ -313,14 +317,8 @@ export default function Navbar({ cartItemsCount = 0 }) {
           <div className="p-6 bg-gradient-to-br from-orange-500 to-red-600">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl overflow-hidden">
-                  <Image
-                    src="/logo.png"
-                    alt="La Casa Logo"
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-10 h-10 bg-white rounded-xl overflow-hidden flex items-center justify-center">
+                  <span className="text-2xl">🍅</span>
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
@@ -374,7 +372,7 @@ export default function Navbar({ cartItemsCount = 0 }) {
               {links.map((link, index) => (
                 <a
                   key={link.id}
-                  href={link.href}
+                  href={getHref(link.href)}
                   onClick={(e) => handleNavClick(e, link.href)}
                   className={`flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 ${
                     activeSection === link.href.replace("#", "")
