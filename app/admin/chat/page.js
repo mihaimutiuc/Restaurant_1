@@ -36,6 +36,8 @@ export default function AdminChatPage() {
   const messagesContainerRef = useRef(null);
   const groupImageRef = useRef(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const isInitialLoad = useRef(true); // Pentru scroll automat doar la prima încărcare
+  const isUserNearBottom = useRef(true); // Pentru a urmări dacă userul e la capăt
 
   // Funcție pentru a genera o culoare consistentă bazată pe email
   const getAvatarColor = (email) => {
@@ -91,6 +93,7 @@ export default function AdminChatPage() {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
       setShowScrollButton(!isNearBottom);
+      isUserNearBottom.current = isNearBottom;
     }
   };
 
@@ -301,11 +304,23 @@ export default function AdminChatPage() {
   useEffect(() => {
     if (status === 'authenticated') {
       setLoading(true);
+      isInitialLoad.current = true; // Resetăm la schimbarea chat-ului
       fetchMessages();
       // Marchează mesajele ca citite când intri în conversație
       markMessagesAsRead(selectedChat);
     }
   }, [selectedChat]);
+
+  // Scroll automat doar la prima încărcare sau când userul e la capăt
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      if (isInitialLoad.current) {
+        // Prima încărcare - scroll instant la capăt
+        messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+        isInitialLoad.current = false;
+      }
+    }
+  }, [messages, loading]);
 
   // Funcție pentru a începe editarea în input-ul principal
   const startEditing = (message) => {
@@ -363,8 +378,8 @@ export default function AdminChatPage() {
     setMessages(prev => [...prev, optimisticMessage]);
     setNewMessage('');
     
-    // Scroll la capăt
-    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    // Scroll instant la capăt când trimiți mesaj
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'instant' }), 50);
 
     try {
       const messageData = {
