@@ -6,8 +6,17 @@ import { prisma } from "@/lib/prisma"
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// Super admin email that cannot be deleted
-const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
+// Verifică dacă utilizatorul este SUPER_ADMIN
+async function isSuperAdmin(session) {
+  if (!session) return false
+  
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { role: true }
+  })
+  
+  return user?.role === 'SUPER_ADMIN'
+}
 
 // PATCH - Update user role
 export async function PATCH(request, { params }) {
@@ -19,7 +28,8 @@ export async function PATCH(request, { params }) {
     }
 
     // Doar super admin poate schimba roluri
-    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+    const hasAccess = await isSuperAdmin(session)
+    if (!hasAccess) {
       return NextResponse.json({ error: "Doar Super Admin poate schimba rolurile" }, { status: 403 })
     }
 
@@ -36,16 +46,16 @@ export async function PATCH(request, { params }) {
     // Get the user to be updated
     const userToUpdate = await prisma.user.findUnique({
       where: { id },
-      select: { email: true, name: true }
+      select: { email: true, name: true, role: true }
     })
 
     if (!userToUpdate) {
       return NextResponse.json({ error: "Utilizatorul nu a fost găsit" }, { status: 404 })
     }
 
-    // Nu permite schimbarea rolului super admin-ului
-    if (userToUpdate.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
-      return NextResponse.json({ error: "Nu poți schimba rolul Super Admin-ului" }, { status: 403 })
+    // Nu permite schimbarea rolului unui alt SUPER_ADMIN
+    if (userToUpdate.role === 'SUPER_ADMIN') {
+      return NextResponse.json({ error: "Nu poți schimba rolul unui Super Admin" }, { status: 403 })
     }
 
     // Actualizează rolul
@@ -82,7 +92,8 @@ export async function DELETE(request, { params }) {
     }
 
     // Doar super admin poate elimina alți admini
-    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+    const hasAccess = await isSuperAdmin(session)
+    if (!hasAccess) {
       return NextResponse.json({ error: "Doar Super Admin poate elimina administratori" }, { status: 403 })
     }
 
@@ -91,16 +102,15 @@ export async function DELETE(request, { params }) {
     // Get the user to be deleted
     const userToDelete = await prisma.user.findUnique({
       where: { id },
-      select: { email: true, name: true }
+      select: { email: true, name: true, role: true }
     })
 
     if (!userToDelete) {
       return NextResponse.json({ error: "Utilizatorul nu a fost găsit" }, { status: 404 })
     }
 
-    // Check if user is super admin (mihai mutiuc)
-    if (userToDelete.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || 
-        userToDelete.name?.toLowerCase() === "mihai mutiuc") {
+    // Nu permite ștergerea unui SUPER_ADMIN
+    if (userToDelete.role === 'SUPER_ADMIN') {
       return NextResponse.json({ error: "Nu poți elimina drepturile de admin pentru Super Admin" }, { status: 403 })
     }
 

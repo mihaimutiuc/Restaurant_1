@@ -7,8 +7,17 @@ import bcrypt from "bcryptjs"
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// Super admin email
-const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
+// Verifică dacă utilizatorul este SUPER_ADMIN
+async function isSuperAdmin(session) {
+  if (!session) return false
+  
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { role: true }
+  })
+  
+  return user?.role === 'SUPER_ADMIN'
+}
 
 export async function GET() {
   try {
@@ -19,7 +28,8 @@ export async function GET() {
     }
 
     // Doar super admin poate vedea lista
-    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+    const hasAccess = await isSuperAdmin(session)
+    if (!hasAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -58,7 +68,8 @@ export async function POST(request) {
     }
     
     // Doar super admin poate crea alți admini
-    if (session.user.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+    const hasAccess = await isSuperAdmin(session)
+    if (!hasAccess) {
       return NextResponse.json({ error: "Doar Super Admin poate adăuga administratori" }, { status: 403 })
     }
 
