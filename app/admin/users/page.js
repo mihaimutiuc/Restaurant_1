@@ -190,7 +190,7 @@ export default function AdminUsersPage() {
   }
 
   // Nu afișa nimic dacă nu este super admin
-  if (!isSuperAdminUser) {
+  if (!isSuperAdmin) {
     return null
   }
 
@@ -203,7 +203,7 @@ export default function AdminUsersPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Gestionare Administratori</h1>
             <p className="text-gray-500 text-sm mt-1">Adaugă sau elimină admini</p>
           </div>
-          {isSuperAdminUser && (
+          {isSuperAdmin && (
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg sm:rounded-xl hover:bg-orange-600 transition-colors text-sm sm:text-base"
