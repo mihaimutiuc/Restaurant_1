@@ -70,13 +70,16 @@ export async function GET(request) {
       isAvailable: product.isAvailable
     }))
 
-    // Formatează categoriile pentru frontend
-    const formattedCategories = categories.map(cat => ({
-      id: cat.slug,
-      name: cat.name,
-      icon: cat.icon,
-      image: cat.image
-    }))
+    // Formatează categoriile pentru frontend - adaugă "Toate" la început
+    const formattedCategories = [
+      { id: "all", name: "Toate", icon: "🍽️", image: null },
+      ...categories.map(cat => ({
+        id: cat.slug,
+        name: cat.name,
+        icon: cat.icon,
+        image: cat.image
+      }))
+    ]
 
     return NextResponse.json({
       categories: formattedCategories,

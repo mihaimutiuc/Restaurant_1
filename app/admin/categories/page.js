@@ -290,89 +290,97 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
 
-      {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Categories List - Compact */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="col-span-1">#</div>
+          <div className="col-span-4">Categorie</div>
+          <div className="col-span-2">Slug</div>
+          <div className="col-span-2 text-center">Produse</div>
+          <div className="col-span-3 text-right">Acțiuni</div>
+        </div>
         {filteredCategories.map((category) => (
           <div
             key={category.id}
-            className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 group"
+            className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors items-center"
           >
-            {/* Category Image */}
-            <div className="relative h-40 bg-gradient-to-br from-orange-100 to-red-100">
-              {category.image ? (
-                <Image
-                  src={category.image}
-                  alt={category.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl">{category.icon}</span>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-              
-              {/* Badge */}
-              <div className="absolute top-3 right-3">
-                <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-700">
-                  {category.productCount || 0} produse
-                </span>
-              </div>
+            {/* Order */}
+            <div className="col-span-1">
+              <span className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-lg text-sm font-medium text-gray-600">
+                {category.order}
+              </span>
+            </div>
 
-              {/* Order badge */}
-              <div className="absolute top-3 left-3">
-                <span className="w-8 h-8 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-full text-sm font-bold text-white">
-                  {category.order}
-                </span>
+            {/* Category Info */}
+            <div className="col-span-4 flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-red-100 flex-shrink-0">
+                {category.image ? (
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-lg">{category.icon}</span>
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{category.icon}</span>
+                  <h3 className="font-semibold text-gray-900 truncate">{category.name}</h3>
+                </div>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">{category.icon}</span>
-                <div>
-                  <h3 className="font-bold text-gray-900 text-lg">{category.name}</h3>
-                  <p className="text-sm text-gray-500">/{category.slug}</p>
-                </div>
-              </div>
+            {/* Slug */}
+            <div className="col-span-2">
+              <span className="text-sm text-gray-500 font-mono">/{category.slug}</span>
+            </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 pt-3 border-t border-gray-100">
-                <button
-                  onClick={() => openEditModal(category)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Editează
-                </button>
-                <button
-                  onClick={() => router.push(`/admin/products?category=${category.id}`)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  Produse
-                </button>
-                <button
-                  onClick={() => handleDelete(category.id)}
-                  disabled={category.productCount > 0}
-                  className={`p-2 rounded-lg transition-colors ${
-                    category.productCount > 0 
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                      : 'bg-red-100 text-red-600 hover:bg-red-200'
-                  }`}
-                  title={category.productCount > 0 ? 'Nu poți șterge - are produse' : 'Șterge categoria'}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
+            {/* Product Count */}
+            <div className="col-span-2 text-center">
+              <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${category.productCount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                {category.productCount || 0}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="col-span-3 flex gap-1.5 justify-end">
+              <button
+                onClick={() => openEditModal(category)}
+                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                title="Editează"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => router.push(`/admin/products?category=${category.id}`)}
+                className="p-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+                title="Vezi produse"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </button>
+              <button
+                onClick={() => handleDelete(category.id)}
+                disabled={category.productCount > 0}
+                className={`p-2 rounded-lg transition-colors ${
+                  category.productCount > 0 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                    : 'bg-red-100 text-red-600 hover:bg-red-200'
+                }`}
+                title={category.productCount > 0 ? 'Nu poți șterge - are produse' : 'Șterge categoria'}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           </div>
         ))}
