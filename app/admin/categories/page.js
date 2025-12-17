@@ -17,7 +17,6 @@ export default function AdminCategoriesPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    slug: "",
     image: "",
     order: 0
   })
@@ -73,7 +72,6 @@ export default function AdminCategoriesPage() {
     setEditingCategory(null)
     setFormData({
       name: "",
-      slug: "",
       image: "",
       order: categories.length
     })
@@ -84,7 +82,6 @@ export default function AdminCategoriesPage() {
     setEditingCategory(category)
     setFormData({
       name: category.name,
-      slug: category.slug,
       image: category.image || "",
       order: category.order || 0
     })
@@ -94,8 +91,7 @@ export default function AdminCategoriesPage() {
   const handleNameChange = (name) => {
     setFormData(prev => ({
       ...prev,
-      name,
-      slug: editingCategory ? prev.slug : generateSlug(name)
+      name
     }))
   }
 
@@ -132,7 +128,7 @@ export default function AdminCategoriesPage() {
     
     const payload = {
       name: formData.name,
-      slug: formData.slug,
+      slug: generateSlug(formData.name),
       image: formData.image || null,
       order: parseInt(formData.order)
     }
@@ -201,8 +197,7 @@ export default function AdminCategoriesPage() {
   }
 
   const filteredCategories = categories.filter(cat =>
-    cat.name.toLowerCase().includes(search.toLowerCase()) ||
-    cat.slug.toLowerCase().includes(search.toLowerCase())
+    cat.name.toLowerCase().includes(search.toLowerCase())
   )
 
   if (isLoading) {
@@ -282,9 +277,8 @@ export default function AdminCategoriesPage() {
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
           <div className="col-span-1">#</div>
-          <div className="col-span-4">Categorie</div>
-          <div className="col-span-2">Slug</div>
-          <div className="col-span-2 text-center">Produse</div>
+          <div className="col-span-5">Categorie</div>
+          <div className="col-span-3 text-center">Produse</div>
           <div className="col-span-3 text-right">Acțiuni</div>
         </div>
         {filteredCategories.map((category) => (
@@ -300,7 +294,7 @@ export default function AdminCategoriesPage() {
             </div>
 
             {/* Category Info */}
-            <div className="col-span-4 flex items-center gap-3">
+            <div className="col-span-5 flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-red-100 flex-shrink-0">
                 {category.image ? (
                   <Image
@@ -322,13 +316,8 @@ export default function AdminCategoriesPage() {
               </div>
             </div>
 
-            {/* Slug */}
-            <div className="col-span-2">
-              <span className="text-sm text-gray-500 font-mono">/{category.slug}</span>
-            </div>
-
             {/* Product Count */}
-            <div className="col-span-2 text-center">
+            <div className="col-span-3 text-center">
               <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${category.productCount > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                 {category.productCount || 0}
               </span>
@@ -420,26 +409,6 @@ export default function AdminCategoriesPage() {
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                   required
                 />
-              </div>
-
-              {/* Slug */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slug (URL) *
-                </label>
-                <div className="flex items-center">
-                  <span className="px-3 py-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-gray-500 text-sm">
-                    /menu?category=
-                  </span>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                    placeholder="feluri-principale"
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-r-xl text-gray-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                    required
-                  />
-                </div>
               </div>
 
               {/* Image */}
