@@ -186,7 +186,7 @@ export default function Navbar({ cartItemsCount = 0 }) {
                     </Link>
                   )}
 
-                  {/* Cart Button */
+                  {/* Cart Button */}
                   <Link
                     href="/checkout"
                     className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 bg-orange-50 text-orange-600 hover:bg-orange-100"
