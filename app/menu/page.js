@@ -183,7 +183,18 @@ export default function MenuPage() {
                         : "text-gray-600 hover:bg-gray-50 hover:text-orange-600"
                     }`}
                   >
-                    <span className="text-lg">{category.icon}</span>
+                    {category.image ? (
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                        <Image
+                          src={category.image}
+                          alt={category.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-lg">{category.icon}</span>
+                    )}
                     <span>{category.name}</span>
                     {activeCategory === category.id && (
                       <span className="ml-1 bg-white/20 text-xs px-2 py-0.5 rounded-full">
