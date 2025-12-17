@@ -417,7 +417,7 @@ export default function AdminCategoriesPage() {
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="ex: Feluri principale"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                   required
                 />
               </div>
@@ -436,7 +436,7 @@ export default function AdminCategoriesPage() {
                     value={formData.slug}
                     onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
                     placeholder="feluri-principale"
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-r-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-r-xl text-gray-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                     required
                   />
                 </div>
@@ -510,7 +510,7 @@ export default function AdminCategoriesPage() {
                   value={formData.order}
                   onChange={(e) => setFormData(prev => ({ ...prev, order: e.target.value }))}
                   min="0"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                 />
                 <p className="text-sm text-gray-500 mt-1">
                   Categoriile sunt sortate în ordine crescătoare
