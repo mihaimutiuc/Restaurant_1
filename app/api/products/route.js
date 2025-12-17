@@ -58,7 +58,6 @@ export async function GET(request) {
       image: product.image,
       category: product.category.slug,
       categoryName: product.category.name,
-      categoryIcon: product.category.icon,
       categoryImage: product.category.image,
       isPopular: product.isPopular,
       isNew: product.isNew,
@@ -72,11 +71,10 @@ export async function GET(request) {
 
     // Formatează categoriile pentru frontend - adaugă "Toate" la început
     const formattedCategories = [
-      { id: "all", name: "Toate", icon: "🍽️", image: null },
+      { id: "all", name: "Toate", image: null },
       ...categories.map(cat => ({
         id: cat.slug,
         name: cat.name,
-        icon: cat.icon,
         image: cat.image
       }))
     ]

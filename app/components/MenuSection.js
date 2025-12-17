@@ -173,7 +173,16 @@ export default function MenuSection({ onAddToCart }) {
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                <span>{category.icon}</span>
+                {category.image && (
+                  <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                    <Image
+                      src={category.image}
+                      alt={category.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
                 <span>{category.name}</span>
               </button>
             ))}
