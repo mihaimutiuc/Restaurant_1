@@ -5,14 +5,12 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 
-// Super admin that cannot be deleted
-const SUPER_ADMIN_EMAIL = "mihaimutiuc@gmail.com"
-
 export default function AdminUsersPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [admins, setAdmins] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -23,17 +21,34 @@ export default function AdminUsersPage() {
   })
   const [error, setError] = useState("")
   const [editingRole, setEditingRole] = useState(null)
-  
-  // Verifică dacă utilizatorul curent este super admin
-  const isSuperAdminUser = session?.user?.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()
 
-  // Redirecționează dacă nu este super admin
+  // Verifică dacă utilizatorul curent este super admin (din baza de date)
   useEffect(() => {
-    if (status === "loading") return
-    
-    if (!session || session.user?.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
-      router.push("/admin/dashboard")
+    async function checkAccess() {
+      if (status === "loading") return
+      if (!session) {
+        router.push("/admin/dashboard")
+        return
+      }
+      
+      try {
+        const res = await fetch("/api/admin/check")
+        if (res.ok) {
+          const data = await res.json()
+          if (data.role === 'SUPER_ADMIN') {
+            setIsSuperAdmin(true)
+          } else {
+            router.push("/admin/dashboard")
+          }
+        } else {
+          router.push("/admin/dashboard")
+        }
+      } catch (error) {
+        console.error("Error checking access:", error)
+        router.push("/admin/dashboard")
+      }
     }
+    checkAccess()
   }, [session, status, router])
 
   const fetchAdmins = async () => {
@@ -85,10 +100,9 @@ export default function AdminUsersPage() {
     }
   }
 
-  const handleRemoveAdmin = async (userId, userName, userEmail) => {
-    // Check if super admin
-    if (userEmail?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || 
-        userName?.toLowerCase() === "mihai mutiuc") {
+  const handleRemoveAdmin = async (userId, userName, userRole) => {
+    // Nu permite ștergerea unui SUPER_ADMIN
+    if (userRole === 'SUPER_ADMIN') {
       alert("Nu poți elimina drepturile de admin pentru Super Admin!")
       return
     }
@@ -132,8 +146,8 @@ export default function AdminUsersPage() {
     }
   }
 
-  const getRoleBadge = (role, email) => {
-    if (email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+  const getRoleBadge = (role) => {
+    if (role === 'SUPER_ADMIN') {
       return (
         <span className="px-2 sm:px-3 py-1 bg-purple-100 text-purple-700 text-[10px] sm:text-xs font-medium rounded-full flex items-center gap-1">
           <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -208,8 +222,7 @@ export default function AdminUsersPage() {
         {admins.length > 0 ? (
           <div className="divide-y divide-gray-100">
             {admins.map((admin) => {
-              const isSuperAdmin = admin.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() || 
-                                   admin.name?.toLowerCase() === "mihai mutiuc"
+              const isAdminSuperAdmin = admin.role === 'SUPER_ADMIN'
               return (
               <div key={admin.id} className="p-3 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50">
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -242,8 +255,8 @@ export default function AdminUsersPage() {
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3 ml-auto sm:ml-0">
-                  {isSuperAdmin ? (
-                    getRoleBadge('SUPER_ADMIN', admin.email)
+                  {isAdminSuperAdmin ? (
+                    getRoleBadge('SUPER_ADMIN')
                   ) : (
                     <>
                       {editingRole === admin.id ? (
@@ -263,12 +276,12 @@ export default function AdminUsersPage() {
                           className="cursor-pointer hover:opacity-80 transition-opacity"
                           title="Click pentru a schimba rolul"
                         >
-                          {getRoleBadge(admin.role, admin.email)}
+                          {getRoleBadge(admin.role)}
                         </button>
                       )}
-                      {isSuperAdminUser && (
+                      {isSuperAdmin && (
                         <button
-                          onClick={() => handleRemoveAdmin(admin.id, admin.name || admin.email, admin.email)}
+                          onClick={() => handleRemoveAdmin(admin.id, admin.name || admin.email, admin.role)}
                           className="p-1.5 sm:p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                           title="Elimină drepturi admin"
                         >
