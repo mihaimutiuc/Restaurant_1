@@ -13,8 +13,29 @@ export default function Navbar({ cartItemsCount = 0 }) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [activeSection, setActiveSection] = useState("hero")
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   const { logo, links, authLinks, cartLabel, orderLabel, mobileMenuTitle, welcomeText } = navigationData
+
+  // Check if user is admin
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!session) {
+        setIsAdmin(false)
+        return
+      }
+      try {
+        const res = await fetch('/api/admin/check')
+        if (res.ok) {
+          const data = await res.json()
+          setIsAdmin(data.isAdmin || false)
+        }
+      } catch (error) {
+        setIsAdmin(false)
+      }
+    }
+    checkAdmin()
+  }, [session])
 
   // Handle scroll effect
   useEffect(() => {
@@ -151,7 +172,21 @@ export default function Navbar({ cartItemsCount = 0 }) {
                     <span>{orderLabel}</span>
                   </Link>
 
-                  {/* Cart Button */}
+                  {/* Admin Button - Only for admins */}
+                  {isAdmin && (
+                    <Link
+                      href="/admin/dashboard"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 bg-gray-900 text-white hover:bg-gray-800"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>Admin</span>
+                    </Link>
+                  )}
+
+                  {/* Cart Button */
                   <Link
                     href="/checkout"
                     className="relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 bg-orange-50 text-orange-600 hover:bg-orange-100"
@@ -216,6 +251,19 @@ export default function Navbar({ cartItemsCount = 0 }) {
                             </svg>
                             <span>Comenzile mele</span>
                           </Link>
+                          {isAdmin && (
+                            <Link
+                              href="/admin/dashboard"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span>Admin Panel</span>
+                            </Link>
+                          )}
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false)
@@ -403,6 +451,19 @@ export default function Navbar({ cartItemsCount = 0 }) {
                     </svg>
                     <span className="font-medium">{orderLabel}</span>
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin/dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-4 px-4 py-3.5 rounded-xl bg-gray-900 text-white hover:bg-gray-800 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="font-medium">Admin Panel</span>
+                    </Link>
+                  )}
                   <Link
                     href="/checkout"
                     onClick={() => setIsMenuOpen(false)}

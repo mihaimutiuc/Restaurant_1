@@ -184,7 +184,7 @@ export default function MenuPage() {
                     }`}
                   >
                     {category.image && (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
                         <Image
                           src={category.image}
                           alt={category.name}
