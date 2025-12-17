@@ -183,14 +183,24 @@ export default function MenuPage() {
                         : "text-gray-600 hover:bg-gray-50 hover:text-orange-600"
                     }`}
                   >
-                    {category.image && (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
+                    {category.image ? (
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
                         <Image
                           src={category.image}
                           alt={category.name}
                           fill
                           className="object-cover"
                         />
+                      </div>
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        activeCategory === category.id 
+                          ? 'bg-white/20' 
+                          : 'bg-orange-100'
+                      }`}>
+                        <svg className={`w-5 h-5 ${activeCategory === category.id ? 'text-white' : 'text-orange-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
                       </div>
                     )}
                     <span>{category.name}</span>
