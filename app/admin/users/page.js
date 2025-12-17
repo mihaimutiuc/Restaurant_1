@@ -406,7 +406,7 @@ export default function AdminUsersPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm text-gray-900 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="ex: Ion Popescu"
                 />
               </div>
@@ -418,7 +418,7 @@ export default function AdminUsersPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2 text-sm text-gray-900 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="admin@example.com"
                 />
               </div>
@@ -430,7 +430,7 @@ export default function AdminUsersPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 text-sm text-gray-900 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     placeholder="Minim 6 caractere"
                     minLength={6}
                   />
