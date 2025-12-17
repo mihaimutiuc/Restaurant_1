@@ -113,9 +113,10 @@ export default function AdminLayout({ children }) {
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: DashboardIcon },
     { name: "Comenzi", href: "/admin/orders", icon: OrdersIcon },
-    // Produse și Testimoniale - doar pentru ADMIN și SUPER_ADMIN
+    // Produse, Categorii și Testimoniale - doar pentru ADMIN și SUPER_ADMIN
     ...(isFullAdmin ? [
       { name: "Produse", href: "/admin/products", icon: ProductsIcon },
+      { name: "Categorii", href: "/admin/categories", icon: CategoriesIcon },
       { name: "Testimoniale", href: "/admin/testimonials", icon: TestimonialsIcon },
     ] : []),
     { name: "Chat", href: "/admin/chat", icon: ChatIcon, badge: unreadMessages },
@@ -304,6 +305,14 @@ function ChatIcon({ className }) {
   return (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+    </svg>
+  )
+}
+
+function CategoriesIcon({ className }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
     </svg>
   )
 }

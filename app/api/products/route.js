@@ -59,6 +59,7 @@ export async function GET(request) {
       category: product.category.slug,
       categoryName: product.category.name,
       categoryIcon: product.category.icon,
+      categoryImage: product.category.image,
       isPopular: product.isPopular,
       isNew: product.isNew,
       ingredients: product.ingredients,
@@ -73,7 +74,8 @@ export async function GET(request) {
     const formattedCategories = categories.map(cat => ({
       id: cat.slug,
       name: cat.name,
-      icon: cat.icon
+      icon: cat.icon,
+      image: cat.image
     }))
 
     return NextResponse.json({
