@@ -70,9 +70,14 @@ export async function GET(request) {
     }))
 
     // Formatează categoriile pentru frontend - adaugă "Toate" la început
+    // Filtrează categoriile care au slug "all" sau "toate" pentru a evita duplicarea
+    const filteredCategories = categories.filter(cat => 
+      cat.slug !== "all" && cat.slug !== "toate"
+    )
+    
     const formattedCategories = [
       { id: "all", name: "Toate", image: null },
-      ...categories.map(cat => ({
+      ...filteredCategories.map(cat => ({
         id: cat.slug,
         name: cat.name,
         image: cat.image
