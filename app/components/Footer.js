@@ -1,9 +1,52 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import footerData from "../data/footer.json"
 
 export default function Footer() {
   const { logo, description, sections, socialMedia, copyright, paymentMethods } = footerData
+  const [email, setEmail] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [status, setStatus] = useState(null) // null, 'success', 'error'
+  const [message, setMessage] = useState("")
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault()
+    if (!email) return
+
+    setIsSubmitting(true)
+    setStatus(null)
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'footer' })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setStatus('success')
+        setMessage(data.message)
+        setEmail("")
+      } else {
+        setStatus('error')
+        setMessage(data.error)
+      }
+    } catch (error) {
+      setStatus('error')
+      setMessage("Eroare la abonare. Încearcă din nou.")
+    } finally {
+      setIsSubmitting(false)
+      setTimeout(() => {
+        setStatus(null)
+        setMessage("")
+      }, 5000)
+    }
+  }
 
   return (
     <footer className="relative bg-gray-950 text-gray-300 overflow-hidden">
@@ -31,11 +74,14 @@ export default function Footer() {
               </p>
             </div>
             <div className="w-full lg:w-auto">
-              <form className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
                 <div className="relative">
                   <input
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Adresa ta de email"
+                    required
                     className="w-full sm:w-80 px-5 py-4 bg-gray-900/50 border border-gray-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -46,11 +92,17 @@ export default function Footer() {
                 </div>
                 <button
                   type="submit"
-                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-105 active:scale-95"
+                  disabled={isSubmitting}
+                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  Abonează-te
+                  {isSubmitting ? 'Se trimite...' : 'Abonează-te'}
                 </button>
               </form>
+              {status && (
+                <p className={`mt-3 text-sm ${status === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {message}
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { notifyNewOrder, notifyPaymentReceived } from "@/lib/telegram"
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -191,6 +192,19 @@ export async function POST(request) {
     await prisma.cartItem.deleteMany({
       where: { cartId: cart.id }
     })
+
+    // Trimite notificare Telegram pentru comandă nouă
+    try {
+      await notifyNewOrder(order, session.user)
+      
+      // Dacă e plătit, trimite și notificare de plată
+      if (order.isPaid) {
+        await notifyPaymentReceived(order, session.user, paymentMethod === 'card' ? 'Card' : 'Altă metodă')
+      }
+    } catch (telegramError) {
+      console.error('Error sending Telegram notification:', telegramError)
+      // Nu blocăm comanda dacă notificarea eșuează
+    }
 
     return NextResponse.json({ order })
   } catch (error) {

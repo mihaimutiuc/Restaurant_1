@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { notifyNewOrder, notifyPaymentReceived } from "@/lib/telegram"
 
 export const dynamic = 'force-dynamic'
 
@@ -175,6 +176,19 @@ export async function POST(request) {
     })
 
     console.log('Order created:', order.id)
+
+    // Trimite notificări Telegram
+    try {
+      // Notificare comandă nouă
+      await notifyNewOrder(order, session.user)
+      
+      // Notificare plată primită
+      const captureId = captureData.purchase_units[0]?.payments?.captures?.[0]?.id
+      await notifyPaymentReceived(order, session.user, 'PayPal', captureId)
+    } catch (telegramError) {
+      console.error('Error sending Telegram notification:', telegramError)
+      // Nu blocăm comanda dacă notificarea eșuează
+    }
 
     return NextResponse.json({ 
       success: true,

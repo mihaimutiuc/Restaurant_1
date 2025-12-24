@@ -243,3 +243,28 @@ model UploadedImage {
   size      Int
   createdAt DateTime @default(now())
 }
+
+// Model pentru mesajele din formularul de contact
+model ContactMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  isReplied Boolean  @default(false)
+  notes     String?  // Note interne admin
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Model pentru abonații la newsletter
+model Subscriber {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  isActive     Boolean  @default(true)
+  source       String   @default("footer") // footer, popup, etc.
+  createdAt    DateTime @default(now())
+  unsubscribedAt DateTime?
+}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { notifyOrderStatusChange, notifyOrderCancelled } from "@/lib/telegram"
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -111,6 +112,17 @@ export async function PATCH(request, { params }) {
         items: true
       }
     })
+
+    // Trimite notificare Telegram dacă s-a schimbat statusul sau etapa
+    try {
+      if (body.status === 'CANCELLED') {
+        await notifyOrderCancelled(order, body.adminNotes || null)
+      } else if (body.status !== undefined || body.stage !== undefined) {
+        await notifyOrderStatusChange(order, order.status, order.stage)
+      }
+    } catch (telegramError) {
+      console.error('Error sending Telegram notification:', telegramError)
+    }
 
     return NextResponse.json(order)
   } catch (error) {
