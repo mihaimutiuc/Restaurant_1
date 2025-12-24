@@ -61,20 +61,20 @@ export default function Footer() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
       
       {/* Main Footer Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Newsletter Section */}
-        <div className="py-12 border-b border-gray-800/50">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-            <div className="text-center lg:text-left">
-              <h3 className="text-2xl font-bold text-white mb-2">
+        <div className="py-8 sm:py-12 border-b border-gray-800/50">
+          <div className="flex flex-col gap-4 sm:gap-8">
+            <div className="text-center">
+              <h3 className="text-lg sm:text-2xl font-bold text-white mb-1 sm:mb-2">
                 Abonează-te la newsletter
               </h3>
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm sm:text-base">
                 Primește oferte exclusive și noutăți direct în inbox
               </p>
             </div>
-            <div className="w-full lg:w-auto">
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
+            <div className="w-full">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2 sm:gap-3">
                 <div className="relative">
                   <input
                     type="email"
@@ -82,10 +82,10 @@ export default function Footer() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Adresa ta de email"
                     required
-                    className="w-full sm:w-80 px-5 py-4 bg-gray-900/50 border border-gray-800 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
+                    className="w-full px-4 sm:px-5 py-3 sm:py-4 bg-gray-900/50 border border-gray-800 rounded-xl sm:rounded-2xl text-white text-sm sm:text-base placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all pr-10"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
@@ -93,13 +93,13 @@ export default function Footer() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-8 py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm sm:text-base font-semibold rounded-xl sm:rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {isSubmitting ? 'Se trimite...' : 'Abonează-te'}
                 </button>
               </form>
               {status && (
-                <p className={`mt-3 text-sm ${status === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`mt-2 sm:mt-3 text-xs sm:text-sm text-center ${status === 'success' ? 'text-green-400' : 'text-red-400'}`}>
                   {message}
                 </p>
               )}
@@ -108,35 +108,35 @@ export default function Footer() {
         </div>
 
         {/* Main Links Grid */}
-        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12">
+        <div className="py-8 sm:py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-12">
           {/* Logo & Description - Takes 4 columns */}
-          <div className="lg:col-span-4">
-            <Link href="/" className="inline-flex items-center gap-3 mb-6 group">
-              <span className="text-4xl transition-transform duration-300 group-hover:scale-110">🍅</span>
+          <div className="sm:col-span-2 lg:col-span-4">
+            <Link href="/" className="inline-flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 group">
+              <span className="text-3xl sm:text-4xl transition-transform duration-300 group-hover:scale-110">🍅</span>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">La</span>
-                  <span className="text-2xl font-bold text-orange-500 italic">Casa</span>
+                  <span className="text-xl sm:text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">La</span>
+                  <span className="text-xl sm:text-2xl font-bold text-orange-500 italic">Casa</span>
                 </div>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-orange-500 font-medium">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] text-orange-500 font-medium">
                   {logo.tagline}
                 </span>
               </div>
             </Link>
             
-            <p className="text-gray-400 leading-relaxed mb-8 max-w-sm">
+            <p className="text-gray-400 text-sm sm:text-base leading-relaxed mb-6 sm:mb-8 max-w-sm">
               {description}
             </p>
             
             {/* Social Media */}
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               {socialMedia.map((social) => (
                 <a
                   key={social.id}
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group/icon w-12 h-12 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-center hover:bg-gradient-to-br hover:from-orange-500 hover:to-red-500 hover:border-transparent hover:scale-110 transition-all duration-300"
+                  className="group/icon w-10 h-10 sm:w-12 sm:h-12 bg-gray-900 border border-gray-800 rounded-lg sm:rounded-xl flex items-center justify-center hover:bg-gradient-to-br hover:from-orange-500 hover:to-red-500 hover:border-transparent hover:scale-110 transition-all duration-300"
                   aria-label={social.name}
                 >
                   <span className="text-gray-400 group-hover/icon:text-white transition-colors">
@@ -150,32 +150,32 @@ export default function Footer() {
           {/* Footer Sections */}
           {sections.map((section, sectionIndex) => (
             <div key={section.id} className={`lg:col-span-${section.id === 3 ? '4' : '2'}`}>
-              <h3 className="text-white font-bold mb-6 flex items-center gap-2">
-                <span className="w-8 h-0.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></span>
+              <h3 className="text-white font-bold text-sm sm:text-base mb-4 sm:mb-6 flex items-center gap-2">
+                <span className="w-6 sm:w-8 h-0.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full"></span>
                 {section.title}
               </h3>
               {section.links ? (
-                <ul className="space-y-4">
+                <ul className="space-y-3 sm:space-y-4">
                   {section.links.map((link, index) => (
                     <li key={index}>
                       <a
                         href={link.href}
-                        className="group/link flex items-center text-gray-400 hover:text-white transition-colors"
+                        className="group/link flex items-center text-sm sm:text-base text-gray-400 hover:text-white transition-colors"
                       >
-                        <span className="w-0 group-hover/link:w-4 h-0.5 bg-orange-500 mr-0 group-hover/link:mr-2 transition-all duration-300 rounded-full"></span>
+                        <span className="w-0 group-hover/link:w-3 sm:group-hover/link:w-4 h-0.5 bg-orange-500 mr-0 group-hover/link:mr-2 transition-all duration-300 rounded-full"></span>
                         {link.label}
                       </a>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <ul className="space-y-4">
+                <ul className="space-y-3 sm:space-y-4">
                   {section.content.map((item, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-gray-900 border border-gray-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <li key={index} className="flex items-start gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-900 border border-gray-800 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                         <ContactIcon type={item.icon} />
                       </div>
-                      <span className="text-gray-400 pt-2">{item.text}</span>
+                      <span className="text-gray-400 text-sm sm:text-base pt-1.5 sm:pt-2 break-all">{item.text}</span>
                     </li>
                   ))}
                 </ul>
@@ -184,68 +184,33 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* App Download Section */}
-        <div className="py-8 border-t border-gray-800/50">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-white font-semibold">Descarcă aplicația</p>
-                <p className="text-gray-500 text-sm">Comenzi mai rapide din aplicație</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <a href="#" className="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 hover:bg-gray-800 transition-all">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                </svg>
-                <div className="text-left">
-                  <p className="text-[10px] text-gray-500">Disponibil pe</p>
-                  <p className="text-sm text-white font-medium -mt-0.5">App Store</p>
-                </div>
-              </a>
-              <a href="#" className="flex items-center gap-2 px-4 py-2 bg-gray-900 border border-gray-800 rounded-xl hover:border-gray-700 hover:bg-gray-800 transition-all">
-                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/>
-                </svg>
-                <div className="text-left">
-                  <p className="text-[10px] text-gray-500">Disponibil pe</p>
-                  <p className="text-sm text-white font-medium -mt-0.5">Google Play</p>
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
-
         {/* Bottom Bar */}
-        <div className="py-8 border-t border-gray-800/50">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            {/* Copyright */}
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <span>{copyright}</span>
-              <span className="hidden sm:inline">•</span>
-              <span className="hidden sm:inline">Făcut cu</span>
-              <span className="hidden sm:inline text-red-500">❤️</span>
-              <span className="hidden sm:inline">în România</span>
-            </div>
-
+        <div className="py-6 sm:py-8 border-t border-gray-800/50">
+          <div className="flex flex-col gap-4 sm:gap-6">
             {/* Payment Methods */}
-            <div className="flex items-center gap-4">
-              <span className="text-gray-500 text-sm">Metode de plată:</span>
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+              <span className="text-gray-500 text-xs sm:text-sm">Metode de plată:</span>
+              <div className="flex flex-wrap justify-center gap-2">
                 {paymentMethods.map((method, index) => (
                   <div 
                     key={index} 
-                    className="h-8 px-3 bg-gray-900 border border-gray-800 rounded-lg flex items-center justify-center hover:border-gray-700 transition-colors"
+                    className="h-7 sm:h-8 px-2 sm:px-3 bg-gray-900 border border-gray-800 rounded-lg flex items-center justify-center hover:border-gray-700 transition-colors"
                   >
                     <PaymentIcon name={method} />
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-gray-500 text-xs sm:text-sm text-center">
+              <span>{copyright}</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="flex items-center gap-1">
+                <span>Făcut cu</span>
+                <span className="text-red-500">❤️</span>
+                <span>în România</span>
+              </span>
             </div>
           </div>
         </div>
