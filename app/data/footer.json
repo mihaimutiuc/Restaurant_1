@@ -42,5 +42,5 @@
     { "id": 4, "name": "TikTok", "url": "https://tiktok.com", "icon": "tiktok" }
   ],
   "copyright": "© 2024 Delicious Restaurant. Toate drepturile rezervate.",
-  "paymentMethods": ["Visa", "Mastercard", "Apple Pay", "Google Pay"]
+  "paymentMethods": ["Card Bancar", "PayPal"]
 }
