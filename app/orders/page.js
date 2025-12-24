@@ -254,61 +254,6 @@ function OrderCard({ order, isNew }) {
     </div>
   )
 }
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stage Tracker - doar pentru comenzile active */}
-      {isActive && (
-        <div className="p-6 border-b">
-          <OrderStageTracker 
-            stage={order.stage}
-            remainingMinutes={order.remainingMinutes}
-            elapsedMinutes={order.elapsedMinutes}
-            estimatedTime={order.estimatedTime}
-            createdAt={order.createdAt}
-          />
-        </div>
-      )}
-
-      {/* Order Items */}
-      <div className="p-6">
-        <h4 className="font-medium text-gray-700 mb-3">Produse comandate:</h4>
-        <div className="space-y-2">
-          {order.items.map((item, index) => (
-            <div key={index} className="flex justify-between text-gray-600">
-              <span>{item.quantity}x {item.name}</span>
-              <span>{(item.price * item.quantity).toFixed(2)} EUR</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Order Details */}
-        {(order.deliveryAddress || order.phone) && (
-          <div className="mt-4 pt-4 border-t">
-            {order.deliveryAddress && (
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">📍 Adresa:</span> {order.deliveryAddress}
-              </p>
-            )}
-            {order.phone && (
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">📱 Telefon:</span> {order.phone}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Order Total */}
-        <div className="flex justify-between items-center pt-4 mt-4 border-t">
-          <span className="font-semibold text-gray-800">Total</span>
-          <span className="text-xl font-bold text-orange-500">{order.total.toFixed(2)} EUR</span>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // Componenta principală care folosește useSearchParams
 function OrdersContent() {
