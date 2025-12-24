@@ -23,6 +23,7 @@ export default function AdminProductsPage() {
     price: "",
     image: "",
     prepTime: "15",
+    calories: "",
     available: true,
     categoryId: ""
   })
@@ -74,6 +75,7 @@ export default function AdminProductsPage() {
       price: "",
       image: "",
       prepTime: "15",
+      calories: "",
       available: true,
       categoryId: categories[0]?.id || ""
     })
@@ -88,6 +90,7 @@ export default function AdminProductsPage() {
       price: product.price.toString(),
       image: product.image || "",
       prepTime: product.prepTime?.toString() || "15",
+      calories: product.calories?.toString() || "",
       available: product.available,
       categoryId: product.categoryId
     })
@@ -103,6 +106,7 @@ export default function AdminProductsPage() {
       price: parseFloat(formData.price),
       image: formData.image || null,
       prepTime: parseInt(formData.prepTime),
+      calories: formData.calories ? parseInt(formData.calories) : 0,
       available: formData.available,
       categoryId: formData.categoryId
     }
@@ -452,6 +456,17 @@ export default function AdminProductsPage() {
                     placeholder="15"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Calorii (kcal)</label>
+                <input
+                  type="number"
+                  value={formData.calories}
+                  onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+                  className="w-full px-4 py-2 text-gray-900 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="ex: 450"
+                />
               </div>
 
               <div>

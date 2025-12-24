@@ -84,6 +84,7 @@ export async function PATCH(request, { params }) {
       updateData.preparationTime = body.prepTime
       updateData.displayTime = `${body.prepTime} min`
     }
+    if (body.calories !== undefined) updateData.calories = body.calories
     if (body.available !== undefined) updateData.isAvailable = body.available
     if (body.categoryId !== undefined) updateData.categoryId = body.categoryId
 

@@ -102,7 +102,7 @@ export async function POST(request) {
         isNew: true,
         ingredients: [],
         allergens: [],
-        calories: 0,
+        calories: body.calories || 0,
         categoryId: body.categoryId
       },
       include: { category: true }
