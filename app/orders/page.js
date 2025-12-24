@@ -81,46 +81,47 @@ function OrderStageTracker({ stage, remainingMinutes, elapsedMinutes, estimatedT
   const progress = Math.min(100, Math.round((elapsedMinutes / estimatedTime) * 100))
   
   return (
-    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 mb-6">
+    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg sm:rounded-xl p-3 sm:p-6 mb-4 sm:mb-6">
       {/* Header cu status curent */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">{stageInfo.icon}</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-2xl sm:text-4xl">{stageInfo.icon}</span>
           <div>
-            <h3 className={`font-bold text-lg ${stageInfo.color}`}>{stageInfo.label}</h3>
-            <p className="text-gray-600 text-sm">{stageInfo.description}</p>
+            <h3 className={`font-bold text-sm sm:text-lg ${stageInfo.color}`}>{stageInfo.label}</h3>
+            <p className="text-gray-600 text-xs sm:text-sm">{stageInfo.description}</p>
           </div>
         </div>
         {stage !== "DELIVERED" && (
-          <div className="text-right">
-            <div className="flex items-baseline gap-1 justify-end">
-              <span className="text-3xl font-bold text-orange-500">{timeLeft.minutes}</span>
-              <span className="text-sm text-gray-500">min</span>
-              <span className="text-3xl font-bold text-orange-500">:</span>
-              <span className="text-3xl font-bold text-orange-500">{String(timeLeft.seconds).padStart(2, '0')}</span>
-              <span className="text-sm text-gray-500">sec</span>
+          <div className="text-left sm:text-right bg-white/50 rounded-lg p-2 sm:p-0 sm:bg-transparent">
+            <div className="flex items-baseline gap-1 sm:justify-end">
+              <span className="text-xl sm:text-3xl font-bold text-orange-500">{timeLeft.minutes}</span>
+              <span className="text-xs sm:text-sm text-gray-500">min</span>
+              <span className="text-xl sm:text-3xl font-bold text-orange-500">:</span>
+              <span className="text-xl sm:text-3xl font-bold text-orange-500">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-xs sm:text-sm text-gray-500">sec</span>
+              <span className="text-xs text-gray-500 ml-1 sm:hidden">rămas</span>
             </div>
-            <div className="text-sm text-gray-500">timp rămas</div>
+            <div className="text-xs sm:text-sm text-gray-500 hidden sm:block">timp rămas</div>
           </div>
         )}
       </div>
 
       {/* Progress bar */}
-      <div className="relative mb-4">
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative mb-3 sm:mb-4">
+        <div className="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-1000 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex justify-between mt-1">
-          <span className="text-xs text-gray-500">{elapsedMinutes} min</span>
-          <span className="text-xs text-gray-500">{estimatedTime} min total</span>
+          <span className="text-[10px] sm:text-xs text-gray-500">{elapsedMinutes} min</span>
+          <span className="text-[10px] sm:text-xs text-gray-500">{estimatedTime} min total</span>
         </div>
       </div>
 
       {/* Stage steps */}
-      <div className="flex justify-between items-center mt-6">
+      <div className="flex justify-between items-center mt-4 sm:mt-6">
         {STAGE_ORDER.map((stageName, index) => {
           const isCompleted = index < currentStageIndex
           const isCurrent = index === currentStageIndex
@@ -131,7 +132,7 @@ function OrderStageTracker({ stage, remainingMinutes, elapsedMinutes, estimatedT
               {/* Connector line */}
               {index > 0 && (
                 <div 
-                  className={`absolute top-4 right-1/2 w-full h-1 -z-10 ${
+                  className={`absolute top-3 sm:top-4 right-1/2 w-full h-0.5 sm:h-1 -z-10 ${
                     isCompleted ? 'bg-green-500' : 'bg-gray-200'
                   }`}
                 />
@@ -139,11 +140,11 @@ function OrderStageTracker({ stage, remainingMinutes, elapsedMinutes, estimatedT
               
               {/* Stage circle */}
               <div 
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-500 ${
+                className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-all duration-500 ${
                   isCompleted 
                     ? 'bg-green-500 text-white' 
                     : isCurrent 
-                      ? 'bg-orange-500 text-white ring-4 ring-orange-200 animate-pulse'
+                      ? 'bg-orange-500 text-white ring-2 sm:ring-4 ring-orange-200 animate-pulse'
                       : 'bg-gray-200 text-gray-500'
                 }`}
               >
@@ -151,10 +152,10 @@ function OrderStageTracker({ stage, remainingMinutes, elapsedMinutes, estimatedT
               </div>
               
               {/* Stage label */}
-              <span className={`text-xs mt-2 text-center hidden sm:block ${
+              <span className={`text-[9px] sm:text-xs mt-1 sm:mt-2 text-center leading-tight ${
                 isCurrent ? 'font-bold text-orange-600' : 'text-gray-500'
               }`}>
-                {stageData.label}
+                {stageData.label.split(' ').slice(0, 2).join(' ')}
               </span>
             </div>
           )
@@ -174,30 +175,85 @@ function OrderCard({ order, isNew }) {
       isNew ? 'ring-2 ring-orange-500 ring-offset-2' : ''
     }`}>
       {/* Order Header */}
-      <div className="p-6 border-b bg-gradient-to-r from-gray-50 to-white">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="p-3 sm:p-6 border-b bg-gradient-to-r from-gray-50 to-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
           <div>
-            <p className="font-semibold text-gray-800">
+            <p className="font-semibold text-gray-800 text-sm sm:text-base">
               Comanda #{order.id.slice(-8).toUpperCase()}
             </p>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 text-xs sm:text-sm">
               {new Date(order.createdAt).toLocaleDateString("ro-RO", {
                 year: "numeric",
-                month: "long",
+                month: "short",
                 day: "numeric",
                 hour: "2-digit",
                 minute: "2-digit"
               })}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {order.isPaid && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+              <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-green-100 text-green-700">
                 ✓ Achitat
               </span>
             )}
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${stageInfo.bgColor} ${stageInfo.color}`}>
-              {stageInfo.icon} {stageInfo.label}
+            <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${stageInfo.bgColor} ${stageInfo.color}`}>
+              {stageInfo.icon} <span className="hidden xs:inline">{stageInfo.label}</span><span className="xs:hidden">{stageInfo.label.split(' ')[0]}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stage Tracker - doar pentru comenzile active */}
+      {isActive && (
+        <div className="p-3 sm:p-6 border-b">
+          <OrderStageTracker 
+            stage={order.stage}
+            remainingMinutes={order.remainingMinutes}
+            elapsedMinutes={order.elapsedMinutes}
+            estimatedTime={order.estimatedTime}
+            createdAt={order.createdAt}
+          />
+        </div>
+      )}
+
+      {/* Order Items */}
+      <div className="p-3 sm:p-6">
+        <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3">Produse comandate:</h4>
+        <div className="space-y-1.5 sm:space-y-2">
+          {order.items.map((item, index) => (
+            <div key={index} className="flex justify-between text-gray-600 text-xs sm:text-base">
+              <span className="flex-1 min-w-0 truncate mr-2">{item.quantity}x {item.name}</span>
+              <span className="flex-shrink-0">{(item.price * item.quantity).toFixed(2)} EUR</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Order Details */}
+        {(order.deliveryAddress || order.phone) && (
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+            {order.deliveryAddress && (
+              <p className="text-xs sm:text-sm text-gray-600 break-words">
+                <span className="font-medium">📍 Adresa:</span> {order.deliveryAddress}
+              </p>
+            )}
+            {order.phone && (
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <span className="font-medium">📱 Telefon:</span> {order.phone}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Order Total */}
+        <div className="flex justify-between items-center pt-3 sm:pt-4 mt-3 sm:mt-4 border-t">
+          <span className="font-semibold text-gray-800 text-sm sm:text-base">Total</span>
+          <span className="text-lg sm:text-xl font-bold text-orange-500">{order.total.toFixed(2)} EUR</span>
+        </div>
+      </div>
+    </div>
+  )
+}
             </span>
           </div>
         </div>
@@ -324,10 +380,10 @@ function OrdersContent() {
     return (
       <main className="min-h-screen">
         <Navbar cartItemsCount={getCartItemsCount()} />
-        <div className="pt-24 pb-20 min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <div className="text-lg text-gray-600">Se încarcă comenzile...</div>
+        <div className="pt-20 sm:pt-24 pb-16 sm:pb-20 min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center px-4">
+            <div className="animate-spin w-10 h-10 sm:w-12 sm:h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-3 sm:mb-4"></div>
+            <div className="text-base sm:text-lg text-gray-600">Se încarcă comenzile...</div>
           </div>
         </div>
         <Footer />
@@ -347,60 +403,60 @@ function OrdersContent() {
     <main className="min-h-screen">
       <Navbar cartItemsCount={getCartItemsCount()} />
       
-      <div className="pt-24 pb-20 bg-gray-50 min-h-screen">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Comenzile mele</h1>
+      <div className="pt-20 sm:pt-24 pb-16 sm:pb-20 bg-gray-50 min-h-screen">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-4 sm:mb-8 gap-2">
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-800">Comenzile mele</h1>
             {orders.length > 0 && (
               <button
                 onClick={fetchOrders}
-                className="flex items-center gap-2 text-orange-500 hover:text-orange-600 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 text-orange-500 hover:text-orange-600 transition-colors text-sm sm:text-base"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Actualizează
+                <span className="hidden sm:inline">Actualizează</span>
               </button>
             )}
           </div>
 
           {/* Banner pentru comandă nouă */}
           {newOrderId && (
-            <div className="mb-6 bg-green-100 border border-green-300 rounded-xl p-4 flex items-center gap-3 animate-pulse">
-              <span className="text-2xl">🎉</span>
+            <div className="mb-4 sm:mb-6 bg-green-100 border border-green-300 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3 animate-pulse">
+              <span className="text-xl sm:text-2xl">🎉</span>
               <div>
-                <p className="font-semibold text-green-800">Comanda a fost plasată cu succes!</p>
-                <p className="text-sm text-green-700">Poți urmări statusul comenzii mai jos.</p>
+                <p className="font-semibold text-green-800 text-sm sm:text-base">Comanda a fost plasată cu succes!</p>
+                <p className="text-xs sm:text-sm text-green-700">Poți urmări statusul comenzii mai jos.</p>
               </div>
             </div>
           )}
 
           {orders.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 shadow-lg text-center">
-              <div className="text-6xl mb-4">📦</div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            <div className="bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 shadow-lg text-center">
+              <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">📦</div>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
                 Nu ai comenzi încă
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">
                 Plasează prima ta comandă din meniul nostru.
               </p>
               <Link
                 href="/#menu"
-                className="inline-block bg-orange-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-orange-600 transition-colors"
+                className="inline-block bg-orange-500 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-semibold hover:bg-orange-600 transition-colors"
               >
                 Vezi meniul
               </Link>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* Comenzi active */}
               {activeOrders.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                  <h2 className="text-base sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+                    <span className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse"></span>
                     Comenzi în curs ({activeOrders.length})
                   </h2>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {activeOrders.map((order) => (
                       <OrderCard 
                         key={order.id} 
@@ -415,10 +471,10 @@ function OrdersContent() {
               {/* Comenzi finalizate */}
               {completedOrders.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  <h2 className="text-base sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">
                     Istoric comenzi ({completedOrders.length})
                   </h2>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {completedOrders.map((order) => (
                       <OrderCard key={order.id} order={order} isNew={false} />
                     ))}
@@ -440,10 +496,10 @@ function OrdersLoading() {
   return (
     <main className="min-h-screen">
       <Navbar cartItemsCount={0} />
-      <div className="pt-24 pb-20 min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <div className="text-lg text-gray-600">Se încarcă comenzile...</div>
+      <div className="pt-20 sm:pt-24 pb-16 sm:pb-20 min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center px-4">
+          <div className="animate-spin w-10 h-10 sm:w-12 sm:h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-3 sm:mb-4"></div>
+          <div className="text-base sm:text-lg text-gray-600">Se încarcă comenzile...</div>
         </div>
       </div>
       <Footer />
